@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="ru" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>CineVertical - Стриминг 9:16</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        dark: {
+                            900: '#0B0B0E',
+                            800: '#13131A',
+                            700: '#1D1D26',
+                            600: '#2A2A38',
+                        },
+                        gold: {
+                            500: '#D4AF37',
+                            400: '#E5C158',
+                            600: '#AA8C2C',
+                        },
+                        bronze: {
+                            500: '#CD7F32',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0B0B0E;
+            color: #F3F4F6;
+            touch-action: manipulation;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        /* Custom scrollbar for horizontal categories */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        /* Glassmorphism effects */
+        .glass {
+            background: rgba(19, 19, 26, 0.75);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+        }
+        .glass-panel {
+            background: rgba(29, 29, 38, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(212, 175, 55, 0.15);
+        }
+        /* Hide default video controls */
+        video::-webkit-media-controls {
+            display: none !important;
+        }
+    </style>
+</head>
+<body class="bg-dark-900 text-gray-100 flex justify-center items-center min-h-screen p-0 sm:p-4">
+
+    <!-- Mobile Frame Container (Simulates Android Phone View) -->
+    <div id="app-container" class="w-full sm:w-[412px] h-[100vh] sm:h-[860px] bg-dark-900 sm:rounded-[40px] sm:border-[8px] sm:border-dark-700 shadow-2xl flex flex-col relative overflow-hidden">
+
+        <!-- Android Status Bar Simulation -->
+        <div class="h-7 bg-dark-900/90 backdrop-blur z-50 flex justify-between items-center px-6 text-xs text-gray-400 select-none shrink-0">
+            <span id="current-time">00:00</span>
+            <div class="flex items-center space-x-2">
+                <i class="fa-solid fa-signal text-[10px]"></i>
+                <i class="fa-solid fa-wifi text-[10px]"></i>
+                <i class="fa-solid fa-battery-three-quarters text-gold-500 text-[10px]"></i>
+            </div>
+        </div>
+
+        <!-- MAIN VIEWPORT CONTENT -->
+        <div id="view-content" class="flex-1 overflow-y-auto no-scrollbar relative flex flex-col pb-20">
+            <!-- Dynamically injected views go here -->
+        </div>
+
+        <!-- NOTIFICATION / TOAST BOX -->
+        <div id="toast-box" class="absolute top-12 left-1/2 transform -translate-x-1/2 bg-dark-700 text-gold-400 px-4 py-2 rounded-2xl text-sm font-medium border border-gold-500/30 shadow-xl opacity-0 transition-opacity duration-300 pointer-events-none z-50 flex items-center space-x-2">
+            <i class="fa-solid fa-circle-check"></i>
+            <span id="toast-text">Успешно</span>
+        </div>
+
+        <!-- BOTTOM NAVIGATION BAR -->
+        <nav id="bottom-nav" class="absolute bottom-0 left-0 right-0 h-16 glass border-t border-dark-700/80 flex justify-around items-center px-2 z-40">
+            <button onclick="switchTab('catalog')" id="nav-catalog" class="flex flex-col items-center justify-center w-full py-1 text-gold-500 transition">
+                <i class="fa-solid fa-film text-lg mb-0.5"></i>
+                <span class="text-[10px] font-medium">Каталог</span>
+            </button>
+            <button onclick="switchTab('search')" id="nav-search" class="flex flex-col items-center justify-center w-full py-1 text-gray-400 hover:text-gray-200 transition">
+                <i class="fa-solid fa-magnifying-glass text-lg mb-0.5"></i>
+                <span class="text-[10px] font-medium">Поиск</span>
+            </button>
+            <button onclick="switchTab('favorites')" id="nav-favorites" class="flex flex-col items-center justify-center w-full py-1 text-gray-400 hover:text-gray-200 transition">
+                <i class="fa-solid fa-bookmark text-lg mb-0.5"></i>
+                <span class="text-[10px] font-medium">Избранное</span>
+            </button>
+            <button onclick="switchTab('profile')" id="nav-profile" class="flex flex-col items-center justify-center w-full py-1 text-gray-400 hover:text-gray-200 transition">
+                <i class="fa-solid fa-user text-lg mb-0.5"></i>
+                <span class="text-[10px] font-medium">Профиль</span>
+            </button>
+        </nav>
+
+        <!-- FULLSCREEN VIDEO PLAYER OVERLAY -->
+        <div id="video-player-modal" class="absolute inset-0 bg-black z-50 hidden flex flex-col justify-between">
+            <!-- Video tag playing 9:16 vertical video placeholder or sample -->
+            <div class="absolute inset-0 w-full h-full overflow-hidden flex items-center justify-center bg-dark-900">
+                <video id="active-video-element" class="w-full h-full object-cover" loop playsinline autoplay>
+                    <!-- Fallback sample looping vertical mp4 -->
+                    <source src="https://assets.mixkit.co/videos/preview/mixkit-woman-running-in-front-of-neon-lights-42867-large.mp4" type="video/mp4">
+                    Ваш браузер не поддерживает видео.
+                </video>
+                <!-- Subtle gradient overlays for UI readability -->
+                <div class="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-black/80 to-transparent pointer-events-none"></div>
+                <div class="absolute inset-x-0 bottom-0 h-48 bg-gradient-to-t from-black/90 to-transparent pointer-events-none"></div>
+            </div>
+
+            <!-- Player Top Bar -->
+            <div class="relative z-10 flex items-center justify-between p-4 pt-6">
+                <button onclick="closeVideoPlayer()" class="w-10 h-10 rounded-full bg-black/40 backdrop-blur flex items-center justify-center text-white text-lg border border-white/10 active:scale-95 transition">
+                    <i class="fa-solid fa-arrow-left"></i>
+                </button>
+                <div class="text-center">
+                    <h3 id="player-series-title" class="text-sm font-bold text-white line-clamp-1">Название сериала</h3>
+                    <p id="player-episode-subtitle" class="text-xs text-gold-400 font-medium">Серия 1</p>
+                </div>
+                <button onclick="togglePlayerLike()" class="w-10 h-10 rounded-full bg-black/40 backdrop-blur flex items-center justify-center text-white text-lg border border-white/10 active:scale-95 transition">
+                    <i id="player-like-icon" class="fa-regular fa-bookmark text-gold-400"></i>
+                </button>
+            </div>
+
+            <!-- Player Center Touch Tap to Pause/Play -->
+            <div onclick="togglePlayPause()" class="absolute inset-0 z-0 flex items-center justify-center">
+                <div id="play-pause-indicator" class="w-16 h-16 rounded-full bg-black/50 backdrop-blur flex items-center justify-center text-white text-2xl opacity-0 transition-opacity duration-300">
+                    <i id="play-pause-icon" class="fa-solid fa-play"></i>
+                </div>
+            </div>
+
+            <!-- Player Bottom Controls & Episode Switcher -->
+            <div class="relative z-10 p-4 pb-8 flex flex-col space-y-3">
+                <!-- Episode Selector strip inside player -->
+                <div class="flex items-center space-x-2 overflow-x-auto no-scrollbar py-1" id="player-episodes-strip">
+                    <!-- Injected dynamically -->
+                </div>
+
+                <div class="flex items-center justify-between text-xs text-gray-300">
+                    <div class="flex items-center space-x-3">
+                        <span id="player-current-time" class="font-mono">0:00</span>
+                        <div class="w-32 bg-white/20 h-1 rounded-full overflow-hidden">
+                            <div id="player-progress-bar" class="bg-gold-500 h-full w-0 transition-all"></div>
+                        </div>
+                        <span id="player-duration" class="font-mono">0:30</span>
+                    </div>
+                    <button onclick="shareSeries()" class="flex items-center space-x-1.5 bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-full backdrop-blur transition text-white text-xs">
+                        <i class="fa-solid fa-share-nodes text-gold-400"></i>
+                        <span>Поделиться</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- JAVASCRIPT APP LOGIC -->
+    <script>
+        // --- Mock Database / State ---
+        const MOCK_SERIES = [
+            {
+                id: 1,
+                title: "Неоновый Город",
+                genre: "Киберпанк",
+                rating: 4.9,
+                views: "1.2M",
+                synopsis: "В футуристическом мегаполисе детектив под прикрытием расследует серию загадочных кибер-атак в ночных кварталах неоновых огней.",
+                poster: "https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?q=80&w=600&auto=format&fit=crop",
+                trailerUrl: "https://assets.mixkit.co/videos/preview/mixkit-woman-running-in-front-of-neon-lights-42867-large.mp4",
+                episodes: [
+                    { id: 101, title: "Серия 1: Пробуждение", duration: "1:45", videoUrl: "https://assets.mixkit.co/videos/preview/mixkit-woman-running-in-front-of-neon-lights-42867-large.mp4" },
+                    { id: 102, title: "Серия 2: Улицы в огне", duration: "2:10", videoUrl: "https://assets.mixkit.co/videos/preview/mixkit-neon-lights-tunnel-background-animation-31953-large.mp4" },
+                    { id: 103, title: "Серия 3: След сети", duration: "1:55", videoUrl: "https://assets.mixkit.co/videos/preview/mixkit-woman-running-in-front-of-neon-lights-42867-large.mp4" },
+                    { id: 104, title: "Серия 4: Финал сезона", duration: "2:30", videoUrl: "https://assets.mixkit.co/videos/preview/mixkit-neon-lights-tunnel-background-animation-31953-large.mp4" }
+                ]
+            },
+            {
+                id: 2,
+                title: "Империя Теней",
+                genre: "Триллер",
+                rating: 4.8,
+                views: "850K",
+                synopsis: "Элитный наемник получает контракт на защиту наследницы корпорации, но вскоре понимает, что за ними охотится вся синдикатная верхушка.",
+                poster: "https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=600&auto=format&fit=crop",
+                trailerUrl: "https://assets.mixkit.co/videos/preview/mixkit-hands-holding-a-neon-light-stick-42870-large.mp4",
+                episodes: [
+                    { id: 201, title: "Серия 1: Контракт", duration: "2:00", videoUrl: "https://assets.mixkit.co/videos/preview/mixkit-hands-holding-a-neon-light-stick-42870-large.mp4" },
+                    { id: 202, title: "Серия 2: Погоня", duration: "1:50", videoUrl: "https://assets.mixkit.co/videos/preview/mixkit-hands-holding-a-neon-light-stick-42870-large.mp4" }
+                ]
+            },
+            {
+                id: 3,
+                title: "Хроники Времени",
+                genre: "Фантастика",
+                rating: 4.7,
+                views: "920K",
+                synopsis: "Ученый изобретает устройство для перемещения на несколько секунд назад, однако каждое использование меняет реальность необратимо.",
+                poster: "https://images.unsplash.com/photo-1509198397868-475647b2a1e5?q=80&w=600&auto=format&fit=crop",
+                trailerUrl: "https://assets.mixkit.co/videos/preview/mixkit-digital-animation-of-screens-and-numbers-31934-large.mp4",
+                episodes: [
+                    { id: 301, title: "Серия 1: Квантовый сбой", duration: "2:15", videoUrl: "https://assets.mixkit.co/videos/preview/mixkit-digital-animation-of-screens-and-numbers-31934-large.mp4" }
+                ]
+            },
+            {
+                id: 4,
+                title: "Последний Самурай",
+                genre: "Экшен",
+                rating: 4.9,
+                views: "2.1M",
+                synopsis: "В нео-Токио 2150 года мастер меча защищает последние бастионы древней культуры против корпоративных роботов-убийц.",
+                poster: "https://images.unsplash.com/photo-1578632767115-351597cf2477?q=80&w=600&auto=format&fit=crop",
+                trailerUrl: "https://assets.mixkit.co/videos/preview/mixkit-digital-animation-of-screens-and-numbers-31934-large.mp4",
+                episodes: [
+                    { id: 401, title: "Серия 1: Сталь и лепестки", duration: "2:20", videoUrl: "https://assets.mixkit.co/videos/preview/mixkit-digital-animation-of-screens-and-numbers-31934-large.mp4" }
+                ]
+            },
+            {
+                id: 5,
+                title: "Тайны Океана",
+                genre: "Детектив",
+                rating: 4.6,
+                views: "640K",
+                synopsis: "Глубоководная исследовательская станция теряет связь с землей после того, как поднимает со дна неизвестный артефакт.",
+                poster: "https://images.unsplash.com/photo-1544551763-46a013bb70d5?q=80&w=600&auto=format&fit=crop",
+                trailerUrl: "https://assets.mixkit.co/videos/preview/mixkit-woman-running-in-front-of-neon-lights-42867-large.mp4",
+                episodes: [
+                    { id: 501, title: "Серия 1: Глубина 10 тысяч", duration: "1:55", videoUrl: "https://assets.mixkit.co/videos/preview/mixkit-woman-running-in-front-of-neon-lights-42867-large.mp4" }
+                ]
+            }
+        ];
+
+        let appState = {
+            currentTab: 'catalog',
+            currentCategory: 'Все',
+            searchQuery: '',
+            favorites: JSON.parse(localStorage.getItem('cv_favorites') || '[1, 3]'),
+            user: JSON.parse(localStorage.getItem('cv_user') || '{"name": "Александр", "email": "alex@cinevertical.ru", "isLoggedIn": true}'),
+            activeSeries: null,
+            activeEpisodeIndex: 0
+        };
+
+        // --- Init & Clock ---
+        window.addEventListener('DOMContentLoaded', () => {
+            updateClock();
+            setInterval(updateClock, 10000);
+            renderCurrentView();
+            
+            // Video progress simulation listener
+            const videoEl = document.getElementById('active-video-element');
+            videoEl.addEventListener('timeupdate', () => {
+                if(videoEl.duration) {
+                    const percent = (videoEl.currentTime / videoEl.duration) * 100;
+                    document.getElementById('player-progress-bar').style.width = percent + '%';
+                    document.getElementById('player-current-time').textContent = formatTime(videoEl.currentTime);
+                    document.getElementById('player-duration').textContent = formatTime(videoEl.duration);
+                }
+            });
+        });
+
+        function updateClock() {
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            document.getElementById('current-time').textContent = `${hours}:${minutes}`;
+        }
+
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${mins}:${String(secs).padStart(2, '0')}`;
+        }
+
+        function showToast(text) {
+            const toast = document.getElementById('toast-box');
+            document.getElementById('toast-text').textContent = text;
+            toast.classList.remove('opacity-0');
+            setTimeout(() => {
+                toast.classList.add('opacity-0');
+            }, 2000);
+        }
+
+        // --- Navigation Router ---
+        function switchTab(tabName) {
+            appState.currentTab = tabName;
+            
+            // Update bottom nav styles
+            ['catalog', 'search', 'favorites', 'profile'].forEach(t => {
+                const btn = document.getElementById(`nav-${t}`);
+                if(t === tabName) {
+                    btn.classList.remove('text-gray-400');
+                    btn.classList.add('text-gold-500');
+                } else {
+                    btn.classList.add('text-gray-400');
+                    btn.classList.remove('text-gold-500');
+                }
+            });
+
+            renderCurrentView();
+        }
+
+        function renderCurrentView() {
+            const container = document.getElementById('view-content');
+            container.scrollTop = 0;
+            
+            if (appState.currentTab === 'catalog') {
+                container.innerHTML = renderCatalogView();
+            } else if (appState.currentTab === 'search') {
+                container.innerHTML = renderSearchView();
+            } else if (appState.currentTab === 'favorites') {
+                container.innerHTML = renderFavoritesView();
+            } else if (appState.currentTab === 'profile') {
+                container.innerHTML = renderProfileView();
+            } else if (appState.currentTab === 'details') {
+                container.innerHTML = renderDetailsView();
+            } else if (appState.currentTab === 'auth') {
+                container.innerHTML = renderAuthView();
+            }
+        }
+
+        // --- View 1: Catalog Screen ---
+        function renderCatalogView() {
+            const categories = ['Все', 'Киберпанк', 'Триллер', 'Фантастика', 'Экшен', 'Детектив'];
+            
+            const filteredSeries = appState.currentCategory === 'All' || appState.currentCategory === 'Все'
+                ? MOCK_SERIES
+                : MOCK_SERIES.filter(s => s.genre === appState.currentCategory);
+
+            return `
+                <!-- Top App Bar -->
+                <div class="px-5 pt-4 pb-2 flex justify-between items-center shrink-0">
+                    <div>
+                        <span class="text-xs font-semibold tracking-wider text-gold-500 uppercase">Кинотеатр 9:16</span>
+                        <h1 class="text-xl font-bold text-white">Рекомендуемые</h1>
+                    </div>
+                    <button onclick="switchTab('search')" class="w-10 h-10 rounded-full bg-dark-700/80 border border-dark-600 flex items-center justify-center text-gray-300 hover:text-gold-400 transition">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                    </button>
+                </div>
+
+                <!-- Featured Hero 9:16 Banner (First item) -->
+                <div class="px-5 py-3">
+                    <div onclick="openDetails(${MOCK_SERIES[0].id})" class="relative rounded-3xl overflow-hidden aspect-[9/13] shadow-2xl group cursor-pointer border border-gold-500/20">
+                        <img src="${MOCK_SERIES[0].poster}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500" alt="${MOCK_SERIES[0].title}">
+                        <div class="absolute inset-0 bg-gradient-to-t from-dark-900 via-dark-900/40 to-transparent"></div>
+                        
+                        <!-- Top badges -->
+                        <div class="absolute top-4 left-4 flex space-x-2">
+                            <span class="bg-gold-500/90 text-dark-900 text-xs font-bold px-2.5 py-1 rounded-full uppercase tracking-wider">Хит сезона</span>
+                            <span class="bg-black/50 backdrop-blur text-gold-400 text-xs font-semibold px-2.5 py-1 rounded-full flex items-center space-x-1 border border-gold-500/30">
+                                <i class="fa-solid fa-star text-[10px]"></i>
+                                <span>${MOCK_SERIES[0].rating}</span>
+                            </span>
+                        </div>
+
+                        <!-- Bottom Info -->
+                        <div class="absolute bottom-4 left-4 right-4">
+                            <span class="text-xs text-gold-400 font-semibold">${MOCK_SERIES[0].genre} • ${MOCK_SERIES[0].views} просмотров</span>
+                            <h2 class="text-xl font-extrabold text-white mt-0.5">${MOCK_SERIES[0].title}</h2>
+                            <p class="text-xs text-gray-300 line-clamp-2 mt-1">${MOCK_SERIES[0].synopsis}</p>
+                            <button class="mt-3 w-full py-2.5 bg-gradient-to-r from-gold-500 to-bronze-500 text-dark-900 font-bold rounded-xl text-xs flex items-center justify-center space-x-2 shadow-lg shadow-gold-500/20">
+                                <i class="fa-solid fa-play"></i>
+                                <span>Смотреть сериал</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Category Chips Horizontal Scroll -->
+                <div class="px-5 py-2">
+                    <div class="flex space-x-2 overflow-x-auto no-scrollbar py-1">
+                        ${categories.map(cat => `
+                            <button onclick="filterCategory('${cat}')" class="px-4 py-2 rounded-xl text-xs font-medium whitespace-nowrap transition ${appState.currentCategory === cat ? 'bg-gold-500 text-dark-900 font-bold shadow-md shadow-gold-500/30' : 'bg-dark-700/80 text-gray-300 hover:bg-dark-600 border border-dark-600'}">
+                                ${cat}
+                            </button>
+                        `).join('')}
+                    </div>
+                </div>
+
+                <!-- Vertical 9:16 Cards Grid -->
+                <div class="px-5 py-3">
+                    <div class="grid grid-cols-2 gap-3">
+                        ${filteredSeries.map(item => `
+                            <div onclick="openDetails(${item.id})" class="bg-dark-800 rounded-2xl overflow-hidden border border-dark-700/80 group cursor-pointer flex flex-col hover:border-gold-500/40 transition">
+                                <div class="relative aspect-[9/13] overflow-hidden bg-dark-700">
+                                    <img src="${item.poster}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300" alt="${item.title}">
+                                    <div class="absolute inset-0 bg-gradient-to-t from-dark-900/90 via-transparent to-transparent"></div>
+                                    <span class="absolute top-2.5 right-2.5 bg-black/60 backdrop-blur text-gold-400 text-[10px] font-bold px-2 py-0.5 rounded-md border border-gold-500/20 flex items-center space-x-1">
+                                        <i class="fa-solid fa-star text-[8px]"></i>
+                                        <span>${item.rating}</span>
+                                    </span>
+                                    <div class="absolute bottom-2.5 left-2.5 right-2.5">
+                                        <span class="text-[10px] text-gold-400 font-medium">${item.genre}</span>
+                                        <h3 class="text-sm font-bold text-white line-clamp-1">${item.title}</h3>
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        function filterCategory(cat) {
+            appState.currentCategory = cat;
+            renderCurrentView();
+        }
+
+        // --- View 2: Search Screen ---
+        function renderSearchView() {
+            const query = appState.searchQuery.toLowerCase();
+            const results = query.trim() === '' 
+                ? MOCK_SERIES 
+                : MOCK_SERIES.filter(s => s.title.toLowerCase().includes(query) || s.genre.toLowerCase().includes(query) || s.synopsis.toLowerCase().includes(query));
+
+            return `
+                <div class="px-5 pt-4 pb-2">
+                    <h1 class="text-xl font-bold text-white mb-3">Поиск сериалов</h1>
+                    <div class="relative">
+                        <i class="fa-solid fa-magnifying-glass absolute left-4 top-3.5 text-gray-400"></i>
+                        <input type="text" id="search-input" value="${appState.searchQuery}" oninput="handleSearchInput(this.value)" placeholder="Название, жанр или сюжет..." class="w-full bg-dark-800 border border-dark-600 rounded-2xl py-3 pl-11 pr-4 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-gold-500 transition">
+                        ${appState.searchQuery ? `
+                            <button onclick="clearSearch()" class="absolute right-4 top-3.5 text-gray-400 hover:text-white">
+                                <i class="fa-solid fa-xmark"></i>
+                            </button>
+                        ` : ''}
+                    </div>
+                </div>
+
+                <div class="px-5 py-3">
+                    <div class="flex justify-between items-center mb-3">
+                        <span class="text-xs text-gray-400 font-medium">Результаты (${results.length})</span>
+                    </div>
+
+                    ${results.length === 0 ? `
+                        <div class="text-center py-20">
+                            <i class="fa-solid fa-film text-4xl text-gray-600 mb-3"></i>
+                            <p class="text-gray-400 text-sm">Ничего не найдено по вашему запросу</p>
+                        </div>
+                    ` : `
+                        <div class="space-y-3">
+                            ${results.map(item => `
+                                <div onclick="openDetails(${item.id})" class="flex items-center space-x-3 bg-dark-800 p-2.5 rounded-2xl border border-dark-700/80 cursor-pointer hover:border-gold-500/40 transition">
+                                    <div class="w-16 h-24 rounded-xl overflow-hidden shrink-0 bg-dark-700">
+                                        <img src="${item.poster}" class="w-full h-full object-cover" alt="${item.title}">
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <div class="flex items-center space-x-2">
+                                            <span class="text-[10px] text-gold-400 font-semibold uppercase">${item.genre}</span>
+                                            <span class="text-[10px] text-gray-400">•</span>
+                                            <span class="text-[10px] text-gray-400">${item.views} просм.</span>
+                                        </div>
+                                        <h3 class="text-sm font-bold text-white truncate mt-0.5">${item.title}</h3>
+                                        <p class="text-xs text-gray-400 line-clamp-2 mt-1">${item.synopsis}</p>
+                                    </div>
+                                    <div class="pr-2 text-gold-500">
+                                        <i class="fa-solid fa-chevron-right text-xs"></i>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    `}
+                </div>
+            `;
+        }
+
+        function handleSearchInput(val) {
+            appState.searchQuery = val;
+            // Re-render only search results container without losing input focus
+            const container = document.getElementById('view-content');
+            const scrollPos = container.scrollTop;
+            container.innerHTML = renderSearchView();
+            container.scrollTop = scrollPos;
+            const input = document.getElementById('search-input');
+            input.focus();
+            input.setSelectionRange(input.value.length, input.value.length);
+        }
+
+        function clearSearch() {
+            appState.searchQuery = '';
+            renderCurrentView();
+        }
+
+        // --- View 3: Series Details Screen ---
+        function openDetails(seriesId) {
+            const series = MOCK_SERIES.find(s => s.id === seriesId);
+            if (!series) return;
+            appState.activeSeries = series;
+            appState.currentTab = 'details';
+            renderCurrentView();
+        }
+
+        function renderDetailsView() {
+            const series = appState.activeSeries;
+            if (!series) return switchTab('catalog');
+
+            const isFav = appState.favorites.includes(series.id);
+
+            return `
+                <!-- Sticky Top Back & Actions Bar -->
+                <div class="absolute top-0 left-0 right-0 z-20 p-4 flex justify-between items-center bg-gradient-to-b from-dark-900/90 to-transparent">
+                    <button onclick="switchTab('catalog')" class="w-10 h-10 rounded-full bg-dark-800/80 backdrop-blur border border-dark-600 flex items-center justify-center text-white hover:text-gold-400 transition">
+                        <i class="fa-solid fa-arrow-left"></i>
+                    </button>
+                    <button onclick="toggleFavorite(${series.id})" class="w-10 h-10 rounded-full bg-dark-800/80 backdrop-blur border border-dark-600 flex items-center justify-center text-gold-400 hover:scale-105 transition">
+                        <i class="${isFav ? 'fa-solid' : 'fa-regular'} fa-bookmark"></i>
+                    </button>
+                </div>
+
+                <!-- Hero Poster Header -->
+                <div class="relative w-full aspect-[9/11] bg-dark-800">
+                    <img src="${series.poster}" class="w-full h-full object-cover" alt="${series.title}">
+                    <div class="absolute inset-0 bg-gradient-to-t from-dark-900 via-dark-900/30 to-transparent"></div>
+                    
+                    <div class="absolute bottom-4 left-5 right-5">
+                        <div class="flex items-center space-x-2 mb-1">
+                            <span class="bg-gold-500 text-dark-900 text-xs font-bold px-2.5 py-0.5 rounded-full">${series.genre}</span>
+                            <span class="bg-black/60 backdrop-blur text-gold-400 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-gold-500/20 flex items-center space-x-1">
+                                <i class="fa-solid fa-star text-[10px]"></i>
+                                <span>${series.rating}</span>
+                            </span>
+                            <span class="text-xs text-gray-300">${series.views} просмотров</span>
+                        </div>
+                        <h1 class="text-2xl font-black text-white">${series.title}</h1>
+                    </div>
+                </div>
+
+                <!-- Content Details & Synopsis -->
+                <div class="px-5 py-4 space-y-4">
+                    <div>
+                        <h3 class="text-xs font-semibold uppercase tracking-wider text-gold-500 mb-1">О сериале</h3>
+                        <p class="text-xs text-gray-300 leading-relaxed">${series.synopsis}</p>
+                    </div>
+
+                    <!-- Trailer Quick Play Button -->
+                    <button onclick="playEpisode(${series.id}, 0)" class="w-full py-3 bg-dark-700/80 hover:bg-dark-600 border border-gold-500/30 rounded-2xl flex items-center justify-center space-x-2 text-gold-400 text-xs font-bold transition">
+                        <i class="fa-solid fa-clapperboard text-sm"></i>
+                        <span>Смотреть трейлер 9:16</span>
+                    </button>
+
+                    <!-- Episode Selector Grid -->
+                    <div>
+                        <div class="flex justify-between items-center mb-3">
+                            <h3 class="text-sm font-bold text-white">Список серий (${series.episodes.length})</h3>
+                            <span class="text-xs text-gray-400">Сезон 1</span>
+                        </div>
+
+                        <div class="grid grid-cols-4 gap-2.5">
+                            ${series.episodes.map((ep, idx) => `
+                                <button onclick="playEpisode(${series.id}, ${idx})" class="aspect-square bg-dark-800 hover:bg-gold-500 hover:text-dark-900 border border-dark-700 rounded-2xl flex flex-col items-center justify-center transition group">
+                                    <span class="text-sm font-black text-gold-400 group-hover:text-dark-900">${idx + 1}</span>
+                                    <span class="text-[10px] text-gray-400 group-hover:text-dark-800 mt-0.5">${ep.duration}</span>
+                                </button>
+                            `).join('')}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function toggleFavorite(seriesId) {
+            const index = appState.favorites.indexOf(seriesId);
+            if (index > -1) {
+                appState.favorites.splice(index, 1);
+                showToast('Удалено из избранного');
+            } else {
+                appState.favorites.push(seriesId);
+                showToast('Добавлено в избранное');
+            }
+            localStorage.setItem('cv_favorites', JSON.stringify(appState.favorites));
+            renderCurrentView();
+        }
+
+        // --- View 4: Video Player Overlay ---
+        function playEpisode(seriesId, episodeIndex) {
+            const series = MOCK_SERIES.find(s => s.id === seriesId);
+            if (!series) return;
+            
+            appState.activeSeries = series;
+            appState.activeEpisodeIndex = episodeIndex;
+
+            const episode = series.episodes[episodeIndex];
+
+            // Setup modal elements
+            document.getElementById('player-series-title').textContent = series.title;
+            document.getElementById('player-episode-subtitle').textContent = episode.title;
+            
+            const videoEl = document.getElementById('active-video-element');
+            videoEl.src = episode.videoUrl;
+            videoEl.play().catch(e => console.log("Autoplay prevented:", e));
+
+            // Render episode switcher strip inside player
+            const strip = document.getElementById('player-episodes-strip');
+            strip.innerHTML = series.episodes.map((ep, idx) => `
+                <button onclick="switchPlayerEpisode(${idx})" class="px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition ${idx === episodeIndex ? 'bg-gold-500 text-dark-900 shadow-md' : 'bg-white/10 text-white hover:bg-white/20'}">
+                    Серия ${idx + 1}
+                </button>
+            `).join('');
+
+            updatePlayerLikeButton();
+
+            // Show modal
+            document.getElementById('video-player-modal').classList.remove('hidden');
+        }
+
+        function switchPlayerEpisode(idx) {
+            appState.activeEpisodeIndex = idx;
+            playEpisode(appState.activeSeries.id, idx);
+        }
+
+        function closeVideoPlayer() {
+            const videoEl = document.getElementById('active-video-element');
+            videoEl.pause();
+            document.getElementById('video-player-modal').classList.add('hidden');
+        }
+
+        function togglePlayerLike() {
+            if (!appState.activeSeries) return;
+            toggleFavorite(appState.activeSeries.id);
+            updatePlayerLikeButton();
+        }
+
+        function updatePlayerLikeButton() {
+            if (!appState.activeSeries) return;
+            const isFav = appState.favorites.includes(appState.activeSeries.id);
+            const icon = document.getElementById('player-like-icon');
+            if (isFav) {
+                icon.className = 'fa-solid fa-bookmark text-gold-500';
+            } else {
+                icon.className = 'fa-regular fa-bookmark text-gold-400';
+            }
+        }
+
+        function togglePlayPause() {
+            const videoEl = document.getElementById('active-video-element');
+            const indicator = document.getElementById('play-pause-indicator');
+            const icon = document.getElementById('play-pause-icon');
+
+            if (videoEl.paused) {
+                videoEl.play();
+                icon.className = 'fa-solid fa-play';
+            } else {
+                videoEl.pause();
+                icon.className = 'fa-solid fa-pause';
+            }
+
+            indicator.classList.remove('opacity-0');
+            setTimeout(() => {
+                indicator.classList.add('opacity-0');
+            }, 500);
+        }
+
+        function shareSeries() {
+            if (navigator.share && appState.activeSeries) {
+                navigator.share({
+                    title: appState.activeSeries.title,
+                    text: `Смотрю сериал "${appState.activeSeries.title}" в CineVertical 9:16!`,
+                    url: window.location.href
+                }).catch(() => {});
+            } else {
+                showToast('Ссылка скопирована в буфер');
+            }
+        }
+
+        // --- View 5: Favorites Screen ---
+        function renderFavoritesView() {
+            const favoriteSeries = MOCK_SERIES.filter(s => appState.favorites.includes(s.id));
+
+            return `
+                <div class="px-5 pt-4 pb-2">
+                    <h1 class="text-xl font-bold text-white mb-1">Избранное</h1>
+                    <p class="text-xs text-gray-400">Ваши сохраненные вертикальные сериалы</p>
+                </div>
+
+                <div class="px-5 py-3">
+                    ${favoriteSeries.length === 0 ? `
+                        <div class="text-center py-24">
+                            <i class="fa-regular fa-bookmark text-4xl text-gray-600 mb-3"></i>
+                            <p class="text-gray-400 text-sm">В избранном пока ничего нет</p>
+                            <button onclick="switchTab('catalog')" class="mt-4 px-5 py-2.5 bg-gold-500 text-dark-900 font-bold text-xs rounded-xl shadow-lg shadow-gold-500/20">
+                                Перейти в каталог
+                            </button>
+                        </div>
+                    ` : `
+                        <div class="grid grid-cols-2 gap-3">
+                            ${favoriteSeries.map(item => `
+                                <div onclick="openDetails(${item.id})" class="bg-dark-800 rounded-2xl overflow-hidden border border-dark-700/85 group cursor-pointer flex flex-col hover:border-gold-500/40 transition">
+                                    <div class="relative aspect-[9/13] overflow-hidden bg-dark-700">
+                                        <img src="${item.poster}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300" alt="${item.title}">
+                                        <div class="absolute inset-0 bg-gradient-to-t from-dark-900/90 via-transparent to-transparent"></div>
+                                        <button onclick="event.stopPropagation(); toggleFavorite(${item.id})" class="absolute top-2.5 right-2.5 w-8 h-8 rounded-full bg-black/60 backdrop-blur flex items-center justify-center text-gold-400 border border-gold-500/30">
+                                            <i class="fa-solid fa-bookmark text-xs"></i>
+                                        </button>
+                                        <div class="absolute bottom-2.5 left-2.5 right-2.5">
+                                            <span class="text-[10px] text-gold-400 font-medium">${item.genre}</span>
+                                            <h3 class="text-sm font-bold text-white line-clamp-1">${item.title}</h3>
+                                        </div>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    `}
+                </div>
+            `;
+        }
+
+        // --- View 6: Profile & Auth Screen ---
+        function renderProfileView() {
+            if (!appState.user.isLoggedIn) {
+                return renderAuthView();
+            }
+
+            return `
+                <div class="px-5 pt-4 pb-2">
+                    <h1 class="text-xl font-bold text-white mb-1">Профиль</h1>
+                    <p class="text-xs text-gray-400">Управление учетной записью</p>
+                </div>
+
+                <div class="px-5 py-3 space-y-4">
+                    <!-- User Card -->
+                    <div class="glass-panel p-5 rounded-3xl flex items-center space-x-4 border border-gold-500/20">
+                        <div class="w-16 h-16 rounded-full bg-gradient-to-br from-gold-500 to-bronze-500 flex items-center justify-center text-dark-900 font-black text-2xl shadow-lg">
+                            ${appState.user.name.charAt(0)}
+                        </div>
+                        <div>
+                            <h2 class="text-base font-bold text-white">${appState.user.name}</h2>
+                            <p class="text-xs text-gray-400">${appState.user.email}</p>
+                            <span class="inline-block mt-1.5 px-2.5 py-0.5 bg-gold-500/10 text-gold-400 text-[10px] font-bold rounded-full border border-gold-500/20">VIP Подписка активна</span>
+                        </div>
+                    </div>
+
+                    <!-- Menu Options -->
+                    <div class="bg-dark-800 rounded-2xl border border-dark-700/80 overflow-hidden divide-y divide-dark-700/60 text-xs">
+                        <div onclick="showToast('Раздел истории просмотров')" class="p-4 flex items-center justify-between cursor-pointer hover:bg-dark-700/50 transition">
+                            <div class="flex items-center space-x-3 text-gray-200">
+                                <i class="fa-solid fa-clock-rotate-left text-gold-500 text-sm"></i>
+                                <span class="font-medium">История просмотров</span>
+                            </div>
+                            <i class="fa-solid fa-chevron-right text-gray-500"></i>
+                        </div>
+                        <div onclick="showToast('Настройки качества видео')" class="p-4 flex items-center justify-between cursor-pointer hover:bg-dark-700/50 transition">
+                            <div class="flex items-center space-x-3 text-gray-200">
+                                <i class="fa-solid fa-sliders text-gold-500 text-sm"></i>
+                                <span class="font-medium">Качество воспроизведения</span>
+                            </div>
+                            <i class="fa-solid fa-chevron-right text-gray-500"></i>
+                        </div>
+                        <div onclick="showToast('Служба поддержки подключена')" class="p-4 flex items-center justify-between cursor-pointer hover:bg-dark-700/50 transition">
+                            <div class="flex items-center space-x-3 text-gray-200">
+                                <i class="fa-solid fa-headset text-gold-500 text-sm"></i>
+                                <span class="font-medium">Поддержка 24/7</span>
+                            </div>
+                            <i class="fa-solid fa-chevron-right text-gray-500"></i>
+                        </div>
+                    </div>
+
+                    <!-- Logout Button -->
+                    <button onclick="logoutUser()" class="w-full py-3 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-400 font-bold rounded-2xl text-xs flex items-center justify-center space-x-2 transition">
+                        <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                        <span>Выйти из аккаунта</span>
+                    </button>
+                </div>
+            `;
+        }
+
+        let isRegisterMode = false;
+
+        function renderAuthView() {
+            return `
+                <div class="px-5 pt-8 pb-4 flex flex-col items-center text-center">
+                    <div class="w-16 h-16 rounded-3xl bg-gradient-to-tr from-gold-500 to-bronze-500 flex items-center justify-center text-dark-900 text-2xl font-black mb-4 shadow-xl shadow-gold-500/20">
+                        9:16
+                    </div>
+                    <h1 class="text-xl font-bold text-white mb-1" id="auth-title">${isRegisterMode ? 'Создать аккаунт' : 'Вход в CineVertical'}</h1>
+                    <p class="text-xs text-gray-400">Стриминговый кинотеатр вертикальных сериалов</p>
+                </div>
+
+                <div class="px-5 py-2 space-y-3">
+                    ${isRegisterMode ? `
+                        <div>
+                            <label class="block text-[11px] font-semibold text-gray-400 mb-1">Имя</label>
+                            <input type="text" id="auth-name" placeholder="Александр" class="w-full bg-dark-800 border border-dark-600 rounded-2xl p-3 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-gold-500">
+                        </div>
+                    ` : ''}
+                    <div>
+                        <label class="block text-[11px] font-semibold text-gray-400 mb-1">Email</label>
+                        <input type="email" id="auth-email" placeholder="name@example.com" class="w-full bg-dark-800 border border-dark-600 rounded-2xl p-3 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-gold-500">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-semibold text-gray-400 mb-1">Пароль</label>
+                        <input type="password" id="auth-password" placeholder="••••••••" class="w-full bg-dark-800 border border-dark-600 rounded-2xl p-3 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-gold-500">
+                    </div>
+
+                    <button onclick="handleAuthSubmit()" class="w-full mt-2 py-3 bg-gradient-to-r from-gold-500 to-bronze-500 text-dark-900 font-bold rounded-2xl text-xs shadow-lg shadow-gold-500/20 transition">
+                        ${isRegisterMode ? 'Зарегистрироваться' : 'Войти'}
+                    </button>
+
+                    <div class="text-center pt-2">
+                        <button onclick="toggleAuthMode()" class="text-xs text-gold-400 hover:underline">
+                            ${isRegisterMode ? 'Уже есть аккаунт? Войти' : 'Нет аккаунта? Зарегистрироваться'}
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function toggleAuthMode() {
+            isRegisterMode = !isRegisterMode;
+            renderCurrentView();
+        }
+
+        function handleAuthSubmit() {
+            const email = document.getElementById('auth-email').value;
+            const nameInput = isRegisterMode ? document.getElementById('auth-name').value : 'Пользователь';
+            
+            if (!email) {
+                showToast('Введите email');
+                return;
+            }
+
+            appState.user = {
+                name: nameInput || 'Киноман',
+                email: email,
+                isLoggedIn: true
+            };
+            localStorage.setItem('cv_user', JSON.stringify(appState.user));
+            showToast(isRegisterMode ? 'Регистрация успешна!' : 'Успешный вход!');
+            switchTab('profile');
+        }
+
+        function logoutUser() {
+            appState.user = { isLoggedIn: false };
+            localStorage.removeItem('cv_user');
+            showToast('Выход выполнен');
+            renderCurrentView();
+        }
+    </script>
+
+</body>
+</html>
