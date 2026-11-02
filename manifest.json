@@ -7,7 +7,7 @@
   "theme_color": "#d4af37",
   "icons": [
     {
-      "src": "https://raw.githubusercontent.com/pwabuilder/PWABuilder/main/assets/icon.png",
+      "src": "https://ogradjuk.github.io/vertical-drama/icon.png",
       "sizes": "512x512",
       "type": "image/png"
     }
