@@ -1,8 +1,9 @@
 {
-  "name": "Vertical Cinema",
-  "short_name": "Cinema",
+  "name": "HMP Vertical Cinema",
+  "short_name": "HMP V.Cinema",
   "start_url": "./index.html",
   "display": "standalone",
+  "version": "1.0.0",
   "background_color": "#0d0d0d",
   "theme_color": "#d4af37",
   "icons": [
