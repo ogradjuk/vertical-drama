@@ -1,51 +1,54 @@
-<!DOCTYPE html>
-<html lang="ru" class="dark">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <link rel="manifest" href="./manifest.json">
-    <title>HMP Vertical - Стриминг 9:16</title>
-    <!-- Tailwind CSS -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CineVertical - Стриминг 9:16</title>
+    
+    <!-- Подключение Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Подключение Иконок FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Конфигурация кастомных цветов Tailwind и встроенные стили -->
     <script>
         tailwind.config = {
-            darkMode: 'class',
             theme: {
                 extend: {
                     colors: {
                         dark: {
                             900: '#0B0B0E',
-                            800: '#13131A',
-                            700: '#1D1D26',
-                            600: '#2A2A38',
+                            800: '#141419',
+                            700: '#1F1F27',
+                            600: '#2A2A35'
                         },
                         gold: {
-                            500: '#D4AF37',
-                            400: '#E5C158',
-                            600: '#AA8C2C',
+                            500: '#E5A93C',
+                            400: '#F0BE5E'
                         },
                         bronze: {
-                            500: '#CD7F32',
+                            500: '#C27C38'
                         }
                     }
                 }
             }
         }
     </script>
-    <!-- Google Fonts Inter -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <!-- FontAwesome Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
     <style>
+        /* Базовые встроенные стили и сброс */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
         body {
             font-family: 'Inter', sans-serif;
             background-color: #0B0B0E;
             color: #F3F4F6;
-            touch-action: manipulation;
+            margin: 0;
+            padding: 0;
             user-select: none;
-            -webkit-user-select: none;
+            -webkit-tap-highlight-color: transparent;
         }
-        /* Custom scrollbar for horizontal categories */
+
+        /* Плавная прокрутка и скрытие scrollbar */
         .no-scrollbar::-webkit-scrollbar {
             display: none;
         }
@@ -53,21 +56,18 @@
             -ms-overflow-style: none;
             scrollbar-width: none;
         }
-        /* Glassmorphism effects */
+
+        /* Glassmorphism эффект */
         .glass {
-            background: rgba(19, 19, 26, 0.75);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-        }
-        .glass-panel {
-            background: rgba(29, 29, 38, 0.6);
+            background: rgba(20, 20, 25, 0.85);
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(212, 175, 55, 0.15);
         }
-        /* Hide default video controls */
-        video::-webkit-media-controls {
-            display: none !important;
+
+        .glass-panel {
+            background: rgba(31, 31, 39, 0.6);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
         }
     </style>
 </head>
@@ -306,7 +306,7 @@
 
     <!-- JAVASCRIPT LOGIC -->
     <script>
-        // --- Database & LocalStorage Integration ---
+        // --- Single Unified Database & LocalStorage Integration ---
         const DEFAULT_SERIES = [
             {
                 id: 1,
@@ -378,14 +378,19 @@
             renderCurrentView();
             
             const videoEl = document.getElementById('active-video-element');
-            videoEl.addEventListener('timeupdate', () => {
-                if(videoEl.duration) {
-                    const percent = (videoEl.currentTime / videoEl.duration) * 100;
-                    document.getElementById('player-progress-bar').style.width = percent + '%';
-                    document.getElementById('player-current-time').textContent = formatTime(videoEl.currentTime);
-                    document.getElementById('player-duration').textContent = formatTime(videoEl.duration);
-                }
-            });
+            if (videoEl) {
+                videoEl.addEventListener('timeupdate', () => {
+                    if (videoEl.duration) {
+                        const percent = (videoEl.currentTime / videoEl.duration) * 100;
+                        const progressBar = document.getElementById('player-progress-bar');
+                        const currentTimeEl = document.getElementById('player-current-time');
+                        const durationEl = document.getElementById('player-duration');
+                        if (progressBar) progressBar.style.width = percent + '%';
+                        if (currentTimeEl) currentTimeEl.textContent = formatTime(videoEl.currentTime);
+                        if (durationEl) durationEl.textContent = formatTime(videoEl.duration);
+                    }
+                });
+            }
         });
 
         function formatTime(seconds) {
@@ -396,6 +401,7 @@
 
         function showToast(text) {
             const toast = document.getElementById('toast-box');
+            if (!toast) return;
             document.getElementById('toast-text').textContent = text;
             toast.classList.remove('opacity-0');
             setTimeout(() => {
@@ -448,6 +454,7 @@
 
         function renderCurrentView() {
             const container = document.getElementById('view-content');
+            if (!container) return;
             container.scrollTop = 0;
             
             if (appState.currentTab === 'catalog') {
@@ -617,8 +624,10 @@
             container.innerHTML = renderSearchView();
             container.scrollTop = scrollPos;
             const input = document.getElementById('search-input');
-            input.focus();
-            input.setSelectionRange(input.value.length, input.value.length);
+            if (input) {
+                input.focus();
+                input.setSelectionRange(input.value.length, input.value.length);
+            }
         }
 
         function clearSearch() {
@@ -750,7 +759,7 @@
 
         function closeVideoPlayer() {
             const videoEl = document.getElementById('active-video-element');
-            videoEl.pause();
+            if (videoEl) videoEl.pause();
             document.getElementById('video-player-modal').classList.add('hidden');
         }
 
@@ -774,18 +783,22 @@
             const indicator = document.getElementById('play-pause-indicator');
             const icon = document.getElementById('play-pause-icon');
 
+            if (!videoEl) return;
+
             if (videoEl.paused) {
                 videoEl.play();
-                icon.className = 'fa-solid fa-play';
+                if (icon) icon.className = 'fa-solid fa-play';
             } else {
                 videoEl.pause();
-                icon.className = 'fa-solid fa-pause';
+                if (icon) icon.className = 'fa-solid fa-pause';
             }
 
-            indicator.classList.remove('opacity-0');
-            setTimeout(() => {
-                indicator.classList.add('opacity-0');
-            }, 500);
+            if (indicator) {
+                indicator.classList.remove('opacity-0');
+                setTimeout(() => {
+                    indicator.classList.add('opacity-0');
+                }, 500);
+            }
         }
 
         function shareSeries() {
@@ -941,8 +954,11 @@
         }
 
         function handleAuthSubmit() {
-            const email = document.getElementById('auth-email').value;
-            const nameInput = isRegisterMode ? document.getElementById('auth-name').value : 'Пользователь';
+            const emailEl = document.getElementById('auth-email');
+            const nameEl = document.getElementById('auth-name');
+            
+            const email = emailEl ? emailEl.value : '';
+            const nameInput = (isRegisterMode && nameEl) ? nameEl.value : 'Пользователь';
             
             if (!email) {
                 showToast('Введите email');
@@ -984,6 +1000,7 @@
 
         function renderAdminView() {
             const container = document.getElementById('admin-content');
+            if (!container) return;
             if (appState.adminTab === 'dashboard') {
                 container.innerHTML = renderAdminDashboard();
             } else if (appState.adminTab === 'series') {
@@ -1164,28 +1181,34 @@
             const titleEl = document.getElementById('series-modal-title');
             const genreSelect = document.getElementById('form-series-genre');
 
-            genreSelect.innerHTML = categoriesDB.map(c => `<option value="${c}">${c}</option>`).join('');
+            if (genreSelect) {
+                genreSelect.innerHTML = categoriesDB.map(c => `<option value="${c}">${c}</option>`).join('');
+            }
 
             if (seriesId) {
                 const s = seriesDB.find(item => item.id === seriesId);
-                titleEl.textContent = 'Редактировать сериал';
-                document.getElementById('edit-series-id').value = s.id;
-                document.getElementById('form-series-title').value = s.title;
-                document.getElementById('form-series-genre').value = s.genre;
-                document.getElementById('form-series-rating').value = s.rating;
-                document.getElementById('form-series-poster').value = s.poster;
-                document.getElementById('form-series-synopsis').value = s.synopsis;
+                if (s) {
+                    if (titleEl) titleEl.textContent = 'Редактировать сериал';
+                    document.getElementById('edit-series-id').value = s.id;
+                    document.getElementById('form-series-title').value = s.title;
+                    document.getElementById('form-series-genre').value = s.genre;
+                    document.getElementById('form-series-rating').value = s.rating;
+                    document.getElementById('form-series-poster').value = s.poster;
+                    document.getElementById('form-series-synopsis').value = s.synopsis;
+                }
             } else {
-                titleEl.textContent = 'Добавить сериал';
-                document.getElementById('series-form').reset();
+                if (titleEl) titleEl.textContent = 'Добавить сериал';
+                const form = document.getElementById('series-form');
+                if (form) form.reset();
                 document.getElementById('edit-series-id').value = '';
             }
 
-            modal.classList.remove('hidden');
+            if (modal) modal.classList.remove('hidden');
         }
 
         function closeSeriesModal() {
-            document.getElementById('admin-series-modal').classList.add('hidden');
+            const modal = document.getElementById('admin-series-modal');
+            if (modal) modal.classList.add('hidden');
         }
 
         function saveSeries(e) {
@@ -1242,17 +1265,21 @@
             const series = seriesDB.find(s => s.id === seriesId);
             if (!series) return;
 
-            document.getElementById('episodes-modal-series-title').textContent = series.title;
+            const titleEl = document.getElementById('episodes-modal-series-title');
+            if (titleEl) titleEl.textContent = series.title;
             renderEpisodesList(series);
-            document.getElementById('admin-episodes-modal').classList.remove('hidden');
+            const modal = document.getElementById('admin-episodes-modal');
+            if (modal) modal.classList.remove('hidden');
         }
 
         function closeEpisodesModal() {
-            document.getElementById('admin-episodes-modal').classList.add('hidden');
+            const modal = document.getElementById('admin-episodes-modal');
+            if (modal) modal.classList.add('hidden');
         }
 
         function renderEpisodesList(series) {
             const container = document.getElementById('episodes-list-container');
+            if (!container) return;
             container.innerHTML = series.episodes.map((ep, idx) => `
                 <div class="flex items-center justify-between p-3 bg-dark-900 rounded-xl border border-dark-700 text-xs">
                     <div>
@@ -1306,6 +1333,7 @@
         function addCategory(e) {
             e.preventDefault();
             const input = document.getElementById('new-category-input');
+            if (!input) return;
             const val = input.value.trim();
             if (val && !categoriesDB.includes(val)) {
                 categoriesDB.push(val);
