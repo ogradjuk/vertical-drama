@@ -1,196 +1,251 @@
-<!DOCTYPE html>
-<html lang="ru" class="dark">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <link rel="manifest" href="./manifest.json">
-    <title>HMP Vertical - Стриминг 9:16</title>
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        dark: {
-                            900: '#0B0B0E',
-                            800: '#13131A',
-                            700: '#1D1D26',
-                            600: '#2A2A38',
-                        },
-                        gold: {
-                            500: '#D4AF37',
-                            400: '#E5C158',
-                            600: '#AA8C2C',
-                        },
-                        bronze: {
-                            500: '#CD7F32',
-                        }
-                    }
-                }
-            }
-        }
-    </script>
-    <!-- Google Fonts Inter -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <!-- FontAwesome Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #0B0B0E;
-            color: #F3F4F6;
-            touch-action: manipulation;
-            user-select: none;
-            -webkit-user-select: none;
-        }
-        /* Custom scrollbar for horizontal categories */
-        .no-scrollbar::-webkit-scrollbar {
-            display: none;
-        }
-        .no-scrollbar {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
-        }
-        /* Glassmorphism effects */
-        .glass {
-            background: rgba(19, 19, 26, 0.75);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-        }
-        .glass-panel {
-            background: rgba(29, 29, 38, 0.6);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(212, 175, 55, 0.15);
-        }
-        /* Hide default video controls */
-        video::-webkit-media-controls {
-            display: none !important;
-        }
-    </style>
-</head>
-<body class="bg-dark-900 text-gray-100 flex justify-center items-center min-h-screen p-0 sm:p-4">
+<body class="bg-dark-900 text-gray-100 flex flex-col min-h-screen p-0">
 
-    <!-- Mobile Frame Container (Simulates Android Phone View) -->
-    <div id="app-container" class="w-full sm:w-[412px] h-[100vh] sm:h-[860px] bg-dark-900 sm:rounded-[40px] sm:border-[8px] sm:border-dark-700 shadow-2xl flex flex-col relative overflow-hidden">
-
-        <!-- MAIN VIEWPORT CONTENT -->
-        <div id="view-content" class="flex-1 overflow-y-auto no-scrollbar relative flex flex-col pb-20">
-            <!-- Dynamically injected views go here -->
+    <!-- DESKTOP TOP BAR: MODE SWITCHER (MOBILE / ADMIN) -->
+    <header class="w-full bg-dark-800 border-b border-dark-700/80 px-4 py-2.5 flex items-center justify-between z-50 shrink-0">
+        <div class="flex items-center space-x-3">
+            <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-gold-500 to-bronze-500 flex items-center justify-center text-dark-900 font-black text-xs shadow-md shadow-gold-500/20">
+                9:16
+            </div>
+            <span class="font-bold text-sm tracking-wide text-white">CineVertical <span class="text-xs text-gold-400 font-normal ml-1">CMS & App Platform</span></span>
         </div>
 
-        <!-- NOTIFICATION / TOAST BOX -->
-        <div id="toast-box" class="absolute top-6 left-1/2 transform -translate-x-1/2 bg-dark-700 text-gold-400 px-4 py-2 rounded-2xl text-sm font-medium border border-gold-500/30 shadow-xl opacity-0 transition-opacity duration-300 pointer-events-none z-50 flex items-center space-x-2">
-            <i class="fa-solid fa-circle-check"></i>
-            <span id="toast-text">Успешно</span>
+        <div class="flex items-center space-x-2 bg-dark-900/90 p-1 rounded-2xl border border-dark-700">
+            <button id="view-mode-app-btn" onclick="togglePlatformView('app')" class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center space-x-2 bg-gold-500 text-dark-900 shadow-md">
+                <i class="fa-solid fa-mobile-screen"></i>
+                <span class="hidden sm:inline">Мобильное приложение</span>
+            </button>
+            <button id="view-mode-admin-btn" onclick="togglePlatformView('admin')" class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center space-x-2 text-gray-400 hover:text-white">
+                <i class="fa-solid fa-sliders"></i>
+                <span class="hidden sm:inline">Панель администратора</span>
+            </button>
         </div>
+    </header>
 
-        <!-- BOTTOM NAVIGATION BAR -->
-        <nav id="bottom-nav" class="absolute bottom-0 left-0 right-0 h-16 glass border-t border-dark-700/80 flex justify-around items-center px-2 z-40">
-            <button onclick="switchTab('catalog')" id="nav-catalog" class="flex flex-col items-center justify-center w-full py-1 text-gold-500 transition">
-                <i class="fa-solid fa-film text-lg mb-0.5"></i>
-                <span class="text-[10px] font-medium">Каталог</span>
-            </button>
-            <button onclick="switchTab('search')" id="nav-search" class="flex flex-col items-center justify-center w-full py-1 text-gray-400 hover:text-gray-200 transition">
-                <i class="fa-solid fa-magnifying-glass text-lg mb-0.5"></i>
-                <span class="text-[10px] font-medium">Поиск</span>
-            </button>
-            <button onclick="switchTab('favorites')" id="nav-favorites" class="flex flex-col items-center justify-center w-full py-1 text-gray-400 hover:text-gray-200 transition">
-                <i class="fa-solid fa-bookmark text-lg mb-0.5"></i>
-                <span class="text-[10px] font-medium">Избранное</span>
-            </button>
-            <button onclick="switchTab('profile')" id="nav-profile" class="flex flex-col items-center justify-center w-full py-1 text-gray-400 hover:text-gray-200 transition">
-                <i class="fa-solid fa-user text-lg mb-0.5"></i>
-                <span class="text-[10px] font-medium">Профиль</span>
-            </button>
-        </nav>
+    <!-- MAIN WRAPPER CONTAINER -->
+    <main class="flex-1 flex justify-center items-center relative overflow-hidden w-full py-0 sm:py-4">
 
-        <!-- FULLSCREEN VIDEO PLAYER OVERLAY -->
-        <div id="video-player-modal" class="absolute inset-0 bg-black z-50 hidden flex flex-col justify-between">
-            <!-- Video tag playing 9:16 vertical video placeholder or sample -->
-            <div class="absolute inset-0 w-full h-full overflow-hidden flex items-center justify-center bg-dark-900">
-                <video id="active-video-element" class="w-full h-full object-cover" loop playsinline autoplay>
-                    <!-- Fallback sample looping vertical mp4 -->
-                    <source src="https://assets.mixkit.co/videos/preview/mixkit-woman-running-in-front-of-neon-lights-42867-large.mp4" type="video/mp4">
-                    Ваш браузер не поддерживает видео.
-                </video>
-                <!-- Subtle gradient overlays for UI readability -->
-                <div class="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-black/80 to-transparent pointer-events-none"></div>
-                <div class="absolute inset-x-0 bottom-0 h-48 bg-gradient-to-t from-black/90 to-transparent pointer-events-none"></div>
+        <!-- 1. MOBILE PHONE APP VIEW CONTAINER -->
+        <div id="app-container" class="w-full sm:w-[412px] h-[100vh] sm:h-[860px] bg-dark-900 sm:rounded-[40px] sm:border-[8px] sm:border-dark-700 shadow-2xl flex flex-col relative overflow-hidden transition-all duration-300">
+
+            <!-- MAIN VIEWPORT CONTENT -->
+            <div id="view-content" class="flex-1 overflow-y-auto no-scrollbar relative flex flex-col pb-20">
+                <!-- Dynamically injected views go here -->
             </div>
 
-            <!-- Player Top Bar -->
-            <div class="relative z-10 flex items-center justify-between p-4 pt-6">
-                <button onclick="closeVideoPlayer()" class="w-10 h-10 rounded-full bg-black/40 backdrop-blur flex items-center justify-center text-white text-lg border border-white/10 active:scale-95 transition">
-                    <i class="fa-solid fa-arrow-left"></i>
+            <!-- NOTIFICATION / TOAST BOX -->
+            <div id="toast-box" class="absolute top-6 left-1/2 transform -translate-x-1/2 bg-dark-700 text-gold-400 px-4 py-2 rounded-2xl text-sm font-medium border border-gold-500/30 shadow-xl opacity-0 transition-opacity duration-300 pointer-events-none z-50 flex items-center space-x-2">
+                <i class="fa-solid fa-circle-check"></i>
+                <span id="toast-text">Успешно</span>
+            </div>
+
+            <!-- BOTTOM NAVIGATION BAR -->
+            <nav id="bottom-nav" class="absolute bottom-0 left-0 right-0 h-16 glass border-t border-dark-700/80 flex justify-around items-center px-2 z-40">
+                <button onclick="switchTab('catalog')" id="nav-catalog" class="flex flex-col items-center justify-center w-full py-1 text-gold-500 transition">
+                    <i class="fa-solid fa-film text-lg mb-0.5"></i>
+                    <span class="text-[10px] font-medium">Каталог</span>
                 </button>
-                <div class="text-center">
-                    <h3 id="player-series-title" class="text-sm font-bold text-white line-clamp-1">Название сериала</h3>
-                    <p id="player-episode-subtitle" class="text-xs text-gold-400 font-medium">Серия 1</p>
-                </div>
-                <button onclick="togglePlayerLike()" class="w-10 h-10 rounded-full bg-black/40 backdrop-blur flex items-center justify-center text-white text-lg border border-white/10 active:scale-95 transition">
-                    <i id="player-like-icon" class="fa-regular fa-bookmark text-gold-400"></i>
+                <button onclick="switchTab('search')" id="nav-search" class="flex flex-col items-center justify-center w-full py-1 text-gray-400 hover:text-gray-200 transition">
+                    <i class="fa-solid fa-magnifying-glass text-lg mb-0.5"></i>
+                    <span class="text-[10px] font-medium">Поиск</span>
                 </button>
-            </div>
+                <button onclick="switchTab('favorites')" id="nav-favorites" class="flex flex-col items-center justify-center w-full py-1 text-gray-400 hover:text-gray-200 transition">
+                    <i class="fa-solid fa-bookmark text-lg mb-0.5"></i>
+                    <span class="text-[10px] font-medium">Избранное</span>
+                </button>
+                <button onclick="switchTab('profile')" id="nav-profile" class="flex flex-col items-center justify-center w-full py-1 text-gray-400 hover:text-gray-200 transition">
+                    <i class="fa-solid fa-user text-lg mb-0.5"></i>
+                    <span class="text-[10px] font-medium">Профиль</span>
+                </button>
+            </nav>
 
-            <!-- Player Center Touch Tap to Pause/Play -->
-            <div onclick="togglePlayPause()" class="absolute inset-0 z-0 flex items-center justify-center">
-                <div id="play-pause-indicator" class="w-16 h-16 rounded-full bg-black/50 backdrop-blur flex items-center justify-center text-white text-2xl opacity-0 transition-opacity duration-300">
-                    <i id="play-pause-icon" class="fa-solid fa-play"></i>
+            <!-- FULLSCREEN VIDEO PLAYER OVERLAY -->
+            <div id="video-player-modal" class="absolute inset-0 bg-black z-50 hidden flex flex-col justify-between">
+                <div class="absolute inset-0 w-full h-full overflow-hidden flex items-center justify-center bg-dark-900">
+                    <video id="active-video-element" class="w-full h-full object-cover" loop playsinline autoplay>
+                        <source src="https://assets.mixkit.co/videos/preview/mixkit-woman-running-in-front-of-neon-lights-42867-large.mp4" type="video/mp4">
+                    </video>
+                    <div class="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-black/80 to-transparent pointer-events-none"></div>
+                    <div class="absolute inset-x-0 bottom-0 h-48 bg-gradient-to-t from-black/90 to-transparent pointer-events-none"></div>
                 </div>
-            </div>
 
-            <!-- Player Bottom Controls & Episode Switcher -->
-            <div class="relative z-10 p-4 pb-8 flex flex-col space-y-3">
-                <!-- Episode Selector strip inside player -->
-                <div class="flex items-center space-x-2 overflow-x-auto no-scrollbar py-1" id="player-episodes-strip">
-                    <!-- Injected dynamically -->
-                </div>
-
-                <div class="flex items-center justify-between text-xs text-gray-300">
-                    <div class="flex items-center space-x-3">
-                        <span id="player-current-time" class="font-mono">0:00</span>
-                        <div class="w-32 bg-white/20 h-1 rounded-full overflow-hidden">
-                            <div id="player-progress-bar" class="bg-gold-500 h-full w-0 transition-all"></div>
-                        </div>
-                        <span id="player-duration" class="font-mono">0:30</span>
+                <div class="relative z-10 flex items-center justify-between p-4 pt-6">
+                    <button onclick="closeVideoPlayer()" class="w-10 h-10 rounded-full bg-black/40 backdrop-blur flex items-center justify-center text-white text-lg border border-white/10 active:scale-95 transition">
+                        <i class="fa-solid fa-arrow-left"></i>
+                    </button>
+                    <div class="text-center">
+                        <h3 id="player-series-title" class="text-sm font-bold text-white line-clamp-1">Название сериала</h3>
+                        <p id="player-episode-subtitle" class="text-xs text-gold-400 font-medium">Серия 1</p>
                     </div>
-                    <button onclick="shareSeries()" class="flex items-center space-x-1.5 bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-full backdrop-blur transition text-white text-xs">
-                        <i class="fa-solid fa-share-nodes text-gold-400"></i>
-                        <span>Поделиться</span>
+                    <button onclick="togglePlayerLike()" class="w-10 h-10 rounded-full bg-black/40 backdrop-blur flex items-center justify-center text-white text-lg border border-white/10 active:scale-95 transition">
+                        <i id="player-like-icon" class="fa-regular fa-bookmark text-gold-400"></i>
                     </button>
                 </div>
+
+                <div onclick="togglePlayPause()" class="absolute inset-0 z-0 flex items-center justify-center">
+                    <div id="play-pause-indicator" class="w-16 h-16 rounded-full bg-black/50 backdrop-blur flex items-center justify-center text-white text-2xl opacity-0 transition-opacity duration-300">
+                        <i id="play-pause-icon" class="fa-solid fa-play"></i>
+                    </div>
+                </div>
+
+                <div class="relative z-10 p-4 pb-8 flex flex-col space-y-3">
+                    <div class="flex items-center space-x-2 overflow-x-auto no-scrollbar py-1" id="player-episodes-strip"></div>
+                    <div class="flex items-center justify-between text-xs text-gray-300">
+                        <div class="flex items-center space-x-3">
+                            <span id="player-current-time" class="font-mono">0:00</span>
+                            <div class="w-32 bg-white/20 h-1 rounded-full overflow-hidden">
+                                <div id="player-progress-bar" class="bg-gold-500 h-full w-0 transition-all"></div>
+                            </div>
+                            <span id="player-duration" class="font-mono">0:30</span>
+                        </div>
+                        <button onclick="shareSeries()" class="flex items-center space-x-1.5 bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-full backdrop-blur transition text-white text-xs">
+                            <i class="fa-solid fa-share-nodes text-gold-400"></i>
+                            <span>Поделиться</span>
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
 
+        <!-- 2. DESKTOP ADMIN PANEL DASHBOARD CONTAINER -->
+        <div id="admin-container" class="hidden w-full max-w-7xl h-[calc(100vh-65px)] bg-dark-900 flex flex-col sm:flex-row overflow-hidden sm:rounded-2xl border border-dark-700/80 shadow-2xl">
+            <!-- Admin Sidebar -->
+            <aside class="w-full sm:w-64 bg-dark-800 border-r border-dark-700/80 p-4 flex flex-col justify-between shrink-0">
+                <div class="space-y-6">
+                    <div class="px-2">
+                        <h2 class="text-xs font-bold uppercase tracking-wider text-gold-500">Панель Управления</h2>
+                        <p class="text-[11px] text-gray-400 mt-0.5">Медиабиблиотека 9:16</p>
+                    </div>
+
+                    <nav class="space-y-1 text-xs font-semibold">
+                        <button onclick="switchAdminTab('dashboard')" id="admin-nav-dashboard" class="w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-gold-500 bg-gold-500/10 border border-gold-500/20 transition">
+                            <i class="fa-solid fa-chart-pie w-5"></i>
+                            <span>Дашборд</span>
+                        </button>
+                        <button onclick="switchAdminTab('series')" id="admin-nav-series" class="w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-gray-400 hover:text-white hover:bg-dark-700/50 transition">
+                            <i class="fa-solid fa-clapperboard w-5"></i>
+                            <span>Сериалы и Серии</span>
+                        </button>
+                        <button onclick="switchAdminTab('categories')" id="admin-nav-categories" class="w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-gray-400 hover:text-white hover:bg-dark-700/50 transition">
+                            <i class="fa-solid fa-tags w-5"></i>
+                            <span>Категории</span>
+                        </button>
+                    </nav>
+                </div>
+
+                <div class="pt-4 border-t border-dark-700 text-xs text-gray-500 flex items-center justify-between">
+                    <span>Статус сервера: <span class="text-green-400 font-bold">Онлайн</span></span>
+                    <i class="fa-solid fa-server text-green-400"></i>
+                </div>
+            </aside>
+
+            <!-- Admin Content Viewport -->
+            <section id="admin-content" class="flex-1 overflow-y-auto no-scrollbar p-6 bg-dark-900">
+                <!-- Dynamically injected admin view -->
+            </section>
+        </div>
+
+    </main>
+
+    <!-- ADMIN MODAL: EDIT / ADD SERIES -->
+    <div id="admin-series-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-dark-800 border border-dark-600 rounded-3xl w-full max-w-xl overflow-hidden shadow-2xl">
+            <div class="px-6 py-4 border-b border-dark-700 flex justify-between items-center">
+                <h3 id="series-modal-title" class="text-base font-bold text-white">Добавить сериал</h3>
+                <button onclick="closeSeriesModal()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <form id="series-form" onsubmit="saveSeries(event)" class="p-6 space-y-4 text-xs">
+                <input type="hidden" id="edit-series-id">
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="col-span-2">
+                        <label class="block font-semibold text-gray-300 mb-1">Название сериала</label>
+                        <input type="text" id="form-series-title" required class="w-full bg-dark-900 border border-dark-600 rounded-xl p-2.5 text-white focus:border-gold-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-gray-300 mb-1">Жанр / Категория</label>
+                        <select id="form-series-genre" required class="w-full bg-dark-900 border border-dark-600 rounded-xl p-2.5 text-white focus:border-gold-500 focus:outline-none">
+                            <!-- Populated dynamically -->
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-gray-300 mb-1">Рейтинг (1.0 - 5.0)</label>
+                        <input type="number" step="0.1" max="5" min="1" id="form-series-rating" required class="w-full bg-dark-900 border border-dark-600 rounded-xl p-2.5 text-white focus:border-gold-500 focus:outline-none">
+                    </div>
+                </div>
+                <div>
+                    <label class="block font-semibold text-gray-300 mb-1">URL обложки (Формат 9:16)</label>
+                    <input type="url" id="form-series-poster" required class="w-full bg-dark-900 border border-dark-600 rounded-xl p-2.5 text-white focus:border-gold-500 focus:outline-none" placeholder="https://images.unsplash.com/...">
+                </div>
+                <div>
+                    <label class="block font-semibold text-gray-300 mb-1">Описание / Описание сюжета</label>
+                    <textarea id="form-series-synopsis" rows="3" required class="w-full bg-dark-900 border border-dark-600 rounded-xl p-2.5 text-white focus:border-gold-500 focus:outline-none"></textarea>
+                </div>
+                <div class="flex justify-end space-x-2 pt-2">
+                    <button type="button" onclick="closeSeriesModal()" class="px-4 py-2.5 rounded-xl bg-dark-700 text-gray-300 hover:bg-dark-600 font-bold">Отмена</button>
+                    <button type="submit" class="px-5 py-2.5 rounded-xl bg-gold-500 text-dark-900 font-bold hover:bg-gold-400">Сохранить</button>
+                </div>
+            </form>
+        </div>
     </div>
 
-    <!-- JAVASCRIPT APP LOGIC -->
+    <!-- ADMIN MODAL: MANAGE EPISODES -->
+    <div id="admin-episodes-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-dark-800 border border-dark-600 rounded-3xl w-full max-w-2xl overflow-hidden shadow-2xl flex flex-col max-h-[85vh]">
+            <div class="px-6 py-4 border-b border-dark-700 flex justify-between items-center shrink-0">
+                <div>
+                    <h3 id="episodes-modal-series-title" class="text-base font-bold text-white">Управление сериями</h3>
+                    <p class="text-xs text-gold-400">Вертикальные эпизоды 9:16</p>
+                </div>
+                <button onclick="closeEpisodesModal()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            
+            <div class="p-6 overflow-y-auto no-scrollbar space-y-6">
+                <!-- Add Episode Form -->
+                <form onsubmit="addEpisodeToSeries(event)" class="bg-dark-900/80 p-4 rounded-2xl border border-gold-500/20 space-y-3 text-xs">
+                    <h4 class="font-bold text-gold-400">Добавить новую серию</h4>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-gray-400 mb-1">Название серии</label>
+                            <input type="text" id="form-ep-title" placeholder="Серия 1: Начало" required class="w-full bg-dark-800 border border-dark-600 rounded-xl p-2 text-white focus:border-gold-500 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-gray-400 mb-1">Длительность</label>
+                            <input type="text" id="form-ep-duration" placeholder="2:15" required class="w-full bg-dark-800 border border-dark-600 rounded-xl p-2 text-white focus:border-gold-500 focus:outline-none">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-gray-400 mb-1">URL видео (9:16 MP4)</label>
+                        <input type="url" id="form-ep-url" placeholder="https://assets.mixkit.co/..." required class="w-full bg-dark-800 border border-dark-600 rounded-xl p-2 text-white focus:border-gold-500 focus:outline-none">
+                    </div>
+                    <button type="submit" class="w-full py-2 bg-gold-500 text-dark-900 font-bold rounded-xl hover:bg-gold-400">Добавить серию</button>
+                </form>
+
+                <!-- Existing Episodes List -->
+                <div>
+                    <h4 class="font-bold text-white text-xs mb-3">Существующие серии</h4>
+                    <div id="episodes-list-container" class="space-y-2">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT LOGIC -->
     <script>
-        // --- Mock Database / State ---
-        const MOCK_SERIES = [
+        // --- Database & LocalStorage Integration ---
+        const DEFAULT_SERIES = [
             {
                 id: 1,
-                title: "Секс в небольшом городе",
-                genre: "Мелодрама",
+                title: "Неоновый Город",
+                genre: "Киберпанк",
                 rating: 4.9,
                 views: "1.2M",
-                synopsis: "В небольшом городе пять подруг ищут любовь и себя: свидания, драмы, неловкие моменты и искренние разговоры. Каждый эпизод — новая история о чувствах и выборе.",
-                poster: "https://ogradjuk.github.io/vertical-drama/sex-in-the-small-town.webp",
-                trailerUrl: "https://ogradjuk.github.io/vertical-drama/sex-in-the-nizhnevartovsk.mp4",
+                synopsis: "В футуристическом мегаполисе детектив под прикрытием расследует серию загадочных кибер-атак в ночных кварталах неоновых огней.",
+                poster: "https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?q=80&w=600&auto=format&fit=crop",
                 episodes: [
-                    { id: 101, title: "Серия 1: Свидание вслепую", duration: "1:45", videoUrl: "https://ogradjuk.github.io/vertical-drama/sex-in-the-nizhnevartovsk.mp4" },
-                    { id: 102, title: "Серия 2: Чужой букет", duration: "2:10", videoUrl: "https://ogradjuk.github.io/vertical-drama/sex-in-the-nizhnevartovsk.mp4" },
-                    { id: 103, title: "Серия 3: Бар у Васи", duration: "1:55", videoUrl: "https://ogradjuk.github.io/vertical-drama/sex-in-the-nizhnevartovsk.mp4" },
-                    { id: 104, title: "Серия 4: Встреча на рынке", duration: "2:30", videoUrl: "https://assets.mixkit.co/videos/preview/mixkit-neon-lights-tunnel-background-animation-31953-large.mp4" },
-                    { id: 105, title: "Серия 5: Секретный чат", duration: "1:45", videoUrl: "https://assets.mixkit.co/videos/preview/mixkit-neon-lights-tunnel-background-animation-31953-large.mp4" },
-                    { id: 106, title: "Серия 6: Конкурс красоты", duration: "2:15", videoUrl: "https://assets.mixkit.co/videos/preview/mixkit-neon-lights-tunnel-background-animation-31953-large.mp4" },
-                    { id: 107, title: "Серия 7: Не тот адрес", duration: "2:50", videoUrl: "https://assets.mixkit.co/videos/preview/mixkit-neon-lights-tunnel-background-animation-31953-large.mp4" },
-                    { id: 108, title: "Серия 8: Городской слух", duration: "1:40", videoUrl: "https://assets.mixkit.co/videos/preview/mixkit-neon-lights-tunnel-background-animation-31953-large.mp4" },
-                    { id: 109, title: "Серия 9: Тайный поклонник", duration: "1:55", videoUrl: "https://assets.mixkit.co/videos/preview/mixkit-neon-lights-tunnel-background-animation-31953-large.mp4" },
-                    { id: 110, title: "Серия 10: Ошибка в переписке", duration: "2:55", videoUrl: "https://assets.mixkit.co/videos/preview/mixkit-neon-lights-tunnel-background-animation-31953-large.mp4" }
+                    { id: 101, title: "Серия 1: Пробуждение", duration: "1:45", videoUrl: "https://assets.mixkit.co/videos/preview/mixkit-woman-running-in-front-of-neon-lights-42867-large.mp4" },
+                    { id: 102, title: "Серия 2: Улицы в огне", duration: "2:10", videoUrl: "https://assets.mixkit.co/videos/preview/mixkit-neon-lights-tunnel-background-animation-31953-large.mp4" },
+                    { id: 103, title: "Серия 3: След сети", duration: "1:55", videoUrl: "https://assets.mixkit.co/videos/preview/mixkit-woman-running-in-front-of-neon-lights-42867-large.mp4" }
                 ]
             },
             {
@@ -200,11 +255,9 @@
                 rating: 4.8,
                 views: "850K",
                 synopsis: "Элитный наемник получает контракт на защиту наследницы корпорации, но вскоре понимает, что за ними охотится вся синдикатная верхушка.",
-                poster: "https://ogradjuk.github.io/vertical-drama/shadows-empire.jpg",
-                trailerUrl: "https://assets.mixkit.co/videos/preview/mixkit-hands-holding-a-neon-light-stick-42870-large.mp4",
+                poster: "https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=600&auto=format&fit=crop",
                 episodes: [
-                    { id: 201, title: "Серия 1: Контракт", duration: "2:00", videoUrl: "https://assets.mixkit.co/videos/preview/mixkit-hands-holding-a-neon-light-stick-42870-large.mp4" },
-                    { id: 202, title: "Серия 2: Погоня", duration: "1:50", videoUrl: "https://assets.mixkit.co/videos/preview/mixkit-hands-holding-a-neon-light-stick-42870-large.mp4" }
+                    { id: 201, title: "Серия 1: Контракт", duration: "2:00", videoUrl: "https://assets.mixkit.co/videos/preview/mixkit-hands-holding-a-neon-light-stick-42870-large.mp4" }
                 ]
             },
             {
@@ -214,55 +267,42 @@
                 rating: 4.7,
                 views: "920K",
                 synopsis: "Ученый изобретает устройство для перемещения на несколько секунд назад, однако каждое использование меняет реальность необратимо.",
-                poster: "https://ogradjuk.github.io/vertical-drama/time-chronicles.jpg",
-                trailerUrl: "https://assets.mixkit.co/videos/preview/mixkit-digital-animation-of-screens-and-numbers-31934-large.mp4",
+                poster: "https://images.unsplash.com/photo-1509198397868-475647b2a1e5?q=80&w=600&auto=format&fit=crop",
                 episodes: [
                     { id: 301, title: "Серия 1: Квантовый сбой", duration: "2:15", videoUrl: "https://assets.mixkit.co/videos/preview/mixkit-digital-animation-of-screens-and-numbers-31934-large.mp4" }
-                ]
-            },
-            {
-                id: 4,
-                title: "Последний Самурай",
-                genre: "Экшен",
-                rating: 4.9,
-                views: "2.1M",
-                synopsis: "В нео-Токио 2150 года мастер меча защищает последние бастионы древней культуры против корпоративных роботов-убийц.",
-                poster: "https://ogradjuk.github.io/vertical-drama/last-samurai.jpg",
-                trailerUrl: "https://assets.mixkit.co/videos/preview/mixkit-digital-animation-of-screens-and-numbers-31934-large.mp4",
-                episodes: [
-                    { id: 401, title: "Серия 1: Сталь и лепестки", duration: "2:20", videoUrl: "https://assets.mixkit.co/videos/preview/mixkit-digital-animation-of-screens-and-numbers-31934-large.mp4" }
-                ]
-            },
-            {
-                id: 5,
-                title: "Тайны Океана",
-                genre: "Детектив",
-                rating: 4.6,
-                views: "640K",
-                synopsis: "Глубоководная исследовательская станция теряет связь с землей после того, как поднимает со дна неизвестный артефакт.",
-                poster: "https://ogradjuk.github.io/vertical-drama/ocean-mythst.jpg",
-                trailerUrl: "https://assets.mixkit.co/videos/preview/mixkit-woman-running-in-front-of-neon-lights-42867-large.mp4",
-                episodes: [
-                    { id: 501, title: "Серия 1: Глубина 10 тысяч", duration: "1:55", videoUrl: "https://assets.mixkit.co/videos/preview/mixkit-woman-running-in-front-of-neon-lights-42867-large.mp4" }
                 ]
             }
         ];
 
+        const DEFAULT_CATEGORIES = ['Киберпанк', 'Триллер', 'Фантастика', 'Экшен', 'Детектив'];
+
+        let seriesDB = JSON.parse(localStorage.getItem('cv_series_db') || JSON.stringify(DEFAULT_SERIES));
+        let categoriesDB = JSON.parse(localStorage.getItem('cv_categories_db') || JSON.stringify(DEFAULT_CATEGORIES));
+
         let appState = {
+            viewMode: 'app', // 'app' or 'admin'
+            adminTab: 'dashboard', // 'dashboard', 'series', 'categories'
             currentTab: 'catalog',
             currentCategory: 'Все',
             searchQuery: '',
             favorites: JSON.parse(localStorage.getItem('cv_favorites') || '[1, 3]'),
             user: JSON.parse(localStorage.getItem('cv_user') || '{"name": "Александр", "email": "alex@cinevertical.ru", "isLoggedIn": true}'),
             activeSeries: null,
-            activeEpisodeIndex: 0
+            activeEpisodeIndex: 0,
+            editingSeriesId: null
         };
 
-        // --- Init & Clock ---
+        let isRegisterMode = false;
+
+        function saveDB() {
+            localStorage.setItem('cv_series_db', JSON.stringify(seriesDB));
+            localStorage.setItem('cv_categories_db', JSON.stringify(categoriesDB));
+        }
+
+        // --- Init & Video Time Listeners ---
         window.addEventListener('DOMContentLoaded', () => {
             renderCurrentView();
             
-            // Video progress simulation listener
             const videoEl = document.getElementById('active-video-element');
             videoEl.addEventListener('timeupdate', () => {
                 if(videoEl.duration) {
@@ -289,19 +329,43 @@
             }, 2000);
         }
 
+        // --- View Mode Switcher (Mobile App vs Admin Panel) ---
+        function togglePlatformView(mode) {
+            appState.viewMode = mode;
+            const appContainer = document.getElementById('app-container');
+            const adminContainer = document.getElementById('admin-container');
+            const appBtn = document.getElementById('view-mode-app-btn');
+            const adminBtn = document.getElementById('view-mode-admin-btn');
+
+            if (mode === 'admin') {
+                appContainer.classList.add('hidden');
+                adminContainer.classList.remove('hidden');
+                adminBtn.className = "px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center space-x-2 bg-gold-500 text-dark-900 shadow-md";
+                appBtn.className = "px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center space-x-2 text-gray-400 hover:text-white";
+                renderAdminView();
+            } else {
+                adminContainer.classList.add('hidden');
+                appContainer.classList.remove('hidden');
+                appBtn.className = "px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center space-x-2 bg-gold-500 text-dark-900 shadow-md";
+                adminBtn.className = "px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center space-x-2 text-gray-400 hover:text-white";
+                renderCurrentView();
+            }
+        }
+
         // --- Navigation Router ---
         function switchTab(tabName) {
             appState.currentTab = tabName;
             
-            // Update bottom nav styles
             ['catalog', 'search', 'favorites', 'profile'].forEach(t => {
                 const btn = document.getElementById(`nav-${t}`);
-                if(t === tabName) {
-                    btn.classList.remove('text-gray-400');
-                    btn.classList.add('text-gold-500');
-                } else {
-                    btn.classList.add('text-gray-400');
-                    btn.classList.remove('text-gold-500');
+                if (btn) {
+                    if (t === tabName) {
+                        btn.classList.remove('text-gray-400');
+                        btn.classList.add('text-gold-500');
+                    } else {
+                        btn.classList.add('text-gray-400');
+                        btn.classList.remove('text-gold-500');
+                    }
                 }
             });
 
@@ -327,16 +391,19 @@
             }
         }
 
-        // --- View 1: Catalog Screen ---
+        // --- Mobile App Views ---
         function renderCatalogView() {
-            const categories = ['Все', 'Мелодрама', 'Триллер', 'Фантастика', 'Экшен', 'Детектив'];
+            const categories = ['Все', ...categoriesDB];
             
             const filteredSeries = appState.currentCategory === 'All' || appState.currentCategory === 'Все'
-                ? MOCK_SERIES
-                : MOCK_SERIES.filter(s => s.genre === appState.currentCategory);
+                ? seriesDB
+                : seriesDB.filter(s => s.genre === appState.currentCategory);
+
+            const heroSeries = seriesDB[0] || {
+                id: 0, title: "Нет данных", genre: "-", rating: 0, views: "0", synopsis: "", poster: "", episodes: []
+            };
 
             return `
-                <!-- Top App Bar -->
                 <div class="px-5 pt-4 pb-2 flex justify-between items-center shrink-0">
                     <div>
                         <span class="text-xs font-semibold tracking-wider text-gold-500 uppercase">Кинотеатр 9:16</span>
@@ -347,35 +414,33 @@
                     </button>
                 </div>
 
-                <!-- Featured Hero 9:16 Banner (First item) -->
-                <div class="px-5 py-3">
-                    <div onclick="openDetails(${MOCK_SERIES[0].id})" class="relative rounded-3xl overflow-hidden aspect-[9/13] shadow-2xl group cursor-pointer border border-gold-500/20">
-                        <img src="${MOCK_SERIES[0].poster}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500" alt="${MOCK_SERIES[0].title}">
-                        <div class="absolute inset-0 bg-gradient-to-t from-dark-900 via-dark-900/40 to-transparent"></div>
-                        
-                        <!-- Top badges -->
-                        <div class="absolute top-4 left-4 flex space-x-2">
-                            <span class="bg-gold-500/90 text-dark-900 text-xs font-bold px-2.5 py-1 rounded-full uppercase tracking-wider">Хит сезона</span>
-                            <span class="bg-black/50 backdrop-blur text-gold-400 text-xs font-semibold px-2.5 py-1 rounded-full flex items-center space-x-1 border border-gold-500/30">
-                                <i class="fa-solid fa-star text-[10px]"></i>
-                                <span>${MOCK_SERIES[0].rating}</span>
-                            </span>
-                        </div>
+                ${seriesDB.length > 0 ? `
+                    <div class="px-5 py-3">
+                        <div onclick="openDetails(${heroSeries.id})" class="relative rounded-3xl overflow-hidden aspect-[9/13] shadow-2xl group cursor-pointer border border-gold-500/20">
+                            <img src="${heroSeries.poster}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500" alt="${heroSeries.title}">
+                            <div class="absolute inset-0 bg-gradient-to-t from-dark-900 via-dark-900/40 to-transparent"></div>
+                            
+                            <div class="absolute top-4 left-4 flex space-x-2">
+                                <span class="bg-gold-500/90 text-dark-900 text-xs font-bold px-2.5 py-1 rounded-full uppercase tracking-wider">Хит сезона</span>
+                                <span class="bg-black/50 backdrop-blur text-gold-400 text-xs font-semibold px-2.5 py-1 rounded-full flex items-center space-x-1 border border-gold-500/30">
+                                    <i class="fa-solid fa-star text-[10px]"></i>
+                                    <span>${heroSeries.rating}</span>
+                                </span>
+                            </div>
 
-                        <!-- Bottom Info -->
-                        <div class="absolute bottom-4 left-4 right-4">
-                            <span class="text-xs text-gold-400 font-semibold">${MOCK_SERIES[0].genre} • ${MOCK_SERIES[0].views} просмотров</span>
-                            <h2 class="text-xl font-extrabold text-white mt-0.5">${MOCK_SERIES[0].title}</h2>
-                            <p class="text-xs text-gray-300 line-clamp-2 mt-1">${MOCK_SERIES[0].synopsis}</p>
-                            <button class="mt-3 w-full py-2.5 bg-gradient-to-r from-gold-500 to-bronze-500 text-dark-900 font-bold rounded-xl text-xs flex items-center justify-center space-x-2 shadow-lg shadow-gold-500/20">
-                                <i class="fa-solid fa-play"></i>
-                                <span>Смотреть сериал</span>
-                            </button>
+                            <div class="absolute bottom-4 left-4 right-4">
+                                <span class="text-xs text-gold-400 font-semibold">${heroSeries.genre} • ${heroSeries.views} просмотров</span>
+                                <h2 class="text-xl font-extrabold text-white mt-0.5">${heroSeries.title}</h2>
+                                <p class="text-xs text-gray-300 line-clamp-2 mt-1">${heroSeries.synopsis}</p>
+                                <button class="mt-3 w-full py-2.5 bg-gradient-to-r from-gold-500 to-bronze-500 text-dark-900 font-bold rounded-xl text-xs flex items-center justify-center space-x-2 shadow-lg shadow-gold-500/20">
+                                    <i class="fa-solid fa-play"></i>
+                                    <span>Смотреть сериал</span>
+                                </button>
+                            </div>
                         </div>
                     </div>
-                </div>
+                ` : ''}
 
-                <!-- Category Chips Horizontal Scroll -->
                 <div class="px-5 py-2">
                     <div class="flex space-x-2 overflow-x-auto no-scrollbar py-1">
                         ${categories.map(cat => `
@@ -386,7 +451,6 @@
                     </div>
                 </div>
 
-                <!-- Vertical 9:16 Cards Grid -->
                 <div class="px-5 py-3">
                     <div class="grid grid-cols-2 gap-3">
                         ${filteredSeries.map(item => `
@@ -415,12 +479,11 @@
             renderCurrentView();
         }
 
-        // --- View 2: Search Screen ---
         function renderSearchView() {
             const query = appState.searchQuery.toLowerCase();
             const results = query.trim() === '' 
-                ? MOCK_SERIES 
-                : MOCK_SERIES.filter(s => s.title.toLowerCase().includes(query) || s.genre.toLowerCase().includes(query) || s.synopsis.toLowerCase().includes(query));
+                ? seriesDB 
+                : seriesDB.filter(s => s.title.toLowerCase().includes(query) || s.genre.toLowerCase().includes(query) || s.synopsis.toLowerCase().includes(query));
 
             return `
                 <div class="px-5 pt-4 pb-2">
@@ -475,7 +538,6 @@
 
         function handleSearchInput(val) {
             appState.searchQuery = val;
-            // Re-render only search results container without losing input focus
             const container = document.getElementById('view-content');
             const scrollPos = container.scrollTop;
             container.innerHTML = renderSearchView();
@@ -490,9 +552,8 @@
             renderCurrentView();
         }
 
-        // --- View 3: Series Details Screen ---
         function openDetails(seriesId) {
-            const series = MOCK_SERIES.find(s => s.id === seriesId);
+            const series = seriesDB.find(s => s.id === seriesId);
             if (!series) return;
             appState.activeSeries = series;
             appState.currentTab = 'details';
@@ -506,7 +567,6 @@
             const isFav = appState.favorites.includes(series.id);
 
             return `
-                <!-- Sticky Top Back & Actions Bar -->
                 <div class="absolute top-0 left-0 right-0 z-20 p-4 flex justify-between items-center bg-gradient-to-b from-dark-900/90 to-transparent">
                     <button onclick="switchTab('catalog')" class="w-10 h-10 rounded-full bg-dark-800/80 backdrop-blur border border-dark-600 flex items-center justify-center text-white hover:text-gold-400 transition">
                         <i class="fa-solid fa-arrow-left"></i>
@@ -516,7 +576,6 @@
                     </button>
                 </div>
 
-                <!-- Hero Poster Header -->
                 <div class="relative w-full aspect-[9/11] bg-dark-800">
                     <img src="${series.poster}" class="w-full h-full object-cover" alt="${series.title}">
                     <div class="absolute inset-0 bg-gradient-to-t from-dark-900 via-dark-900/30 to-transparent"></div>
@@ -534,34 +593,37 @@
                     </div>
                 </div>
 
-                <!-- Content Details & Synopsis -->
                 <div class="px-5 py-4 space-y-4">
                     <div>
                         <h3 class="text-xs font-semibold uppercase tracking-wider text-gold-500 mb-1">О сериале</h3>
                         <p class="text-xs text-gray-300 leading-relaxed">${series.synopsis}</p>
                     </div>
 
-                    <!-- Trailer Quick Play Button -->
-                    <button onclick="playEpisode(${series.id}, 0)" class="w-full py-3 bg-dark-700/80 hover:bg-dark-600 border border-gold-500/30 rounded-2xl flex items-center justify-center space-x-2 text-gold-400 text-xs font-bold transition">
-                        <i class="fa-solid fa-clapperboard text-sm"></i>
-                        <span>Смотреть трейлер 9:16</span>
-                    </button>
+                    ${series.episodes.length > 0 ? `
+                        <button onclick="playEpisode(${series.id}, 0)" class="w-full py-3 bg-dark-700/80 hover:bg-dark-600 border border-gold-500/30 rounded-2xl flex items-center justify-center space-x-2 text-gold-400 text-xs font-bold transition">
+                            <i class="fa-solid fa-play text-sm"></i>
+                            <span>Смотреть 1 серию 9:16</span>
+                        </button>
+                    ` : ''}
 
-                    <!-- Episode Selector Grid -->
                     <div>
                         <div class="flex justify-between items-center mb-3">
                             <h3 class="text-sm font-bold text-white">Список серий (${series.episodes.length})</h3>
                             <span class="text-xs text-gray-400">Сезон 1</span>
                         </div>
 
-                        <div class="grid grid-cols-4 gap-2.5">
-                            ${series.episodes.map((ep, idx) => `
-                                <button onclick="playEpisode(${series.id}, ${idx})" class="aspect-square bg-dark-800 hover:bg-gold-500 hover:text-dark-900 border border-dark-700 rounded-2xl flex flex-col items-center justify-center transition group">
-                                    <span class="text-sm font-black text-gold-400 group-hover:text-dark-900">${idx + 1}</span>
-                                    <span class="text-[10px] text-gray-400 group-hover:text-dark-800 mt-0.5">${ep.duration}</span>
-                                </button>
-                            `).join('')}
-                        </div>
+                        ${series.episodes.length === 0 ? `
+                            <p class="text-xs text-gray-500 italic">Эпизоды еще не добавлены</p>
+                        ` : `
+                            <div class="grid grid-cols-4 gap-2.5">
+                                ${series.episodes.map((ep, idx) => `
+                                    <button onclick="playEpisode(${series.id}, ${idx})" class="aspect-square bg-dark-800 hover:bg-gold-500 hover:text-dark-900 border border-dark-700 rounded-2xl flex flex-col items-center justify-center transition group">
+                                        <span class="text-sm font-black text-gold-400 group-hover:text-dark-900">${idx + 1}</span>
+                                        <span class="text-[10px] text-gray-400 group-hover:text-dark-800 mt-0.5">${ep.duration}</span>
+                                    </button>
+                                `).join('')}
+                            </div>
+                        `}
                     </div>
                 </div>
             `;
@@ -580,17 +642,15 @@
             renderCurrentView();
         }
 
-        // --- View 4: Video Player Overlay ---
         function playEpisode(seriesId, episodeIndex) {
-            const series = MOCK_SERIES.find(s => s.id === seriesId);
-            if (!series) return;
+            const series = seriesDB.find(s => s.id === seriesId);
+            if (!series || !series.episodes[episodeIndex]) return;
             
             appState.activeSeries = series;
             appState.activeEpisodeIndex = episodeIndex;
 
             const episode = series.episodes[episodeIndex];
 
-            // Setup modal elements
             document.getElementById('player-series-title').textContent = series.title;
             document.getElementById('player-episode-subtitle').textContent = episode.title;
             
@@ -598,7 +658,6 @@
             videoEl.src = episode.videoUrl;
             videoEl.play().catch(e => console.log("Autoplay prevented:", e));
 
-            // Render episode switcher strip inside player
             const strip = document.getElementById('player-episodes-strip');
             strip.innerHTML = series.episodes.map((ep, idx) => `
                 <button onclick="switchPlayerEpisode(${idx})" class="px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition ${idx === episodeIndex ? 'bg-gold-500 text-dark-900 shadow-md' : 'bg-white/10 text-white hover:bg-white/20'}">
@@ -607,8 +666,6 @@
             `).join('');
 
             updatePlayerLikeButton();
-
-            // Show modal
             document.getElementById('video-player-modal').classList.remove('hidden');
         }
 
@@ -633,10 +690,8 @@
             if (!appState.activeSeries) return;
             const isFav = appState.favorites.includes(appState.activeSeries.id);
             const icon = document.getElementById('player-like-icon');
-            if (isFav) {
-                icon.className = 'fa-solid fa-bookmark text-gold-500';
-            } else {
-                icon.className = 'fa-regular fa-bookmark text-gold-400';
+            if (icon) {
+                icon.className = isFav ? 'fa-solid fa-bookmark text-gold-500' : 'fa-regular fa-bookmark text-gold-400';
             }
         }
 
@@ -671,9 +726,8 @@
             }
         }
 
-        // --- View 5: Favorites Screen ---
         function renderFavoritesView() {
-            const favoriteSeries = MOCK_SERIES.filter(s => appState.favorites.includes(s.id));
+            const favoriteSeries = seriesDB.filter(s => appState.favorites.includes(s.id));
 
             return `
                 <div class="px-5 pt-4 pb-2">
@@ -713,7 +767,6 @@
             `;
         }
 
-        // --- View 6: Profile & Auth Screen ---
         function renderProfileView() {
             if (!appState.user.isLoggedIn) {
                 return renderAuthView();
@@ -726,7 +779,6 @@
                 </div>
 
                 <div class="px-5 py-3 space-y-4">
-                    <!-- User Card -->
                     <div class="glass-panel p-5 rounded-3xl flex items-center space-x-4 border border-gold-500/20">
                         <div class="w-16 h-16 rounded-full bg-gradient-to-br from-gold-500 to-bronze-500 flex items-center justify-center text-dark-900 font-black text-2xl shadow-lg">
                             ${appState.user.name.charAt(0)}
@@ -738,7 +790,6 @@
                         </div>
                     </div>
 
-                    <!-- Menu Options -->
                     <div class="bg-dark-800 rounded-2xl border border-dark-700/80 overflow-hidden divide-y divide-dark-700/60 text-xs">
                         <div onclick="showToast('Раздел истории просмотров')" class="p-4 flex items-center justify-between cursor-pointer hover:bg-dark-700/50 transition">
                             <div class="flex items-center space-x-3 text-gray-200">
@@ -763,7 +814,6 @@
                         </div>
                     </div>
 
-                    <!-- Logout Button -->
                     <button onclick="logoutUser()" class="w-full py-3 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-400 font-bold rounded-2xl text-xs flex items-center justify-center space-x-2 transition">
                         <i class="fa-solid fa-arrow-right-from-bracket"></i>
                         <span>Выйти из аккаунта</span>
@@ -771,8 +821,6 @@
                 </div>
             `;
         }
-
-        let isRegisterMode = false;
 
         function renderAuthView() {
             return `
@@ -843,7 +891,365 @@
             showToast('Выход выполнен');
             renderCurrentView();
         }
-    </script>
 
+        // --- Admin Panel Logic ---
+        function switchAdminTab(tab) {
+            appState.adminTab = tab;
+            ['dashboard', 'series', 'categories'].forEach(t => {
+                const btn = document.getElementById(`admin-nav-${t}`);
+                if (btn) {
+                    if (t === tab) {
+                        btn.className = "w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-gold-500 bg-gold-500/10 border border-gold-500/20 transition font-bold";
+                    } else {
+                        btn.className = "w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-gray-400 hover:text-white hover:bg-dark-700/50 transition font-medium";
+                    }
+                }
+            });
+            renderAdminView();
+        }
+
+        function renderAdminView() {
+            const container = document.getElementById('admin-content');
+            if (appState.adminTab === 'dashboard') {
+                container.innerHTML = renderAdminDashboard();
+            } else if (appState.adminTab === 'series') {
+                container.innerHTML = renderAdminSeriesView();
+            } else if (appState.adminTab === 'categories') {
+                container.innerHTML = renderAdminCategoriesView();
+            }
+        }
+
+        function renderAdminDashboard() {
+            const totalEpisodes = seriesDB.reduce((acc, s) => acc + s.episodes.length, 0);
+
+            return `
+                <div class="space-y-6">
+                    <div>
+                        <h1 class="text-2xl font-bold text-white">Обзор системы</h1>
+                        <p class="text-xs text-gray-400">Статистика и аналитика вашей медиаплатформы</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                        <div class="bg-dark-800 p-5 rounded-2xl border border-dark-700 flex items-center justify-between">
+                            <div>
+                                <span class="text-xs text-gray-400">Всего сериалов</span>
+                                <h3 class="text-2xl font-black text-white mt-1">${seriesDB.length}</h3>
+                            </div>
+                            <div class="w-12 h-12 rounded-2xl bg-gold-500/10 text-gold-400 border border-gold-500/20 flex items-center justify-center text-xl">
+                                <i class="fa-solid fa-clapperboard"></i>
+                            </div>
+                        </div>
+                        <div class="bg-dark-800 p-5 rounded-2xl border border-dark-700 flex items-center justify-between">
+                            <div>
+                                <span class="text-xs text-gray-400">Всего серий (9:16)</span>
+                                <h3 class="text-2xl font-black text-white mt-1">${totalEpisodes}</h3>
+                            </div>
+                            <div class="w-12 h-12 rounded-2xl bg-bronze-500/10 text-bronze-500 border border-bronze-500/20 flex items-center justify-center text-xl">
+                                <i class="fa-solid fa-film"></i>
+                            </div>
+                        </div>
+                        <div class="bg-dark-800 p-5 rounded-2xl border border-dark-700 flex items-center justify-between">
+                            <div>
+                                <span class="text-xs text-gray-400">Категорий</span>
+                                <h3 class="text-2xl font-black text-white mt-1">${categoriesDB.length}</h3>
+                            </div>
+                            <div class="w-12 h-12 rounded-2xl bg-blue-500/10 text-blue-400 border border-blue-500/20 flex items-center justify-center text-xl">
+                                <i class="fa-solid fa-tags"></i>
+                            </div>
+                        </div>
+                        <div class="bg-dark-800 p-5 rounded-2xl border border-dark-700 flex items-center justify-between">
+                            <div>
+                                <span class="text-xs text-gray-400">Просмотров</span>
+                                <h3 class="text-2xl font-black text-white mt-1">4.7M</h3>
+                            </div>
+                            <div class="w-12 h-12 rounded-2xl bg-green-500/10 text-green-400 border border-green-500/20 flex items-center justify-center text-xl">
+                                <i class="fa-solid fa-eye"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-dark-800 p-5 rounded-2xl border border-dark-700">
+                        <h3 class="text-sm font-bold text-white mb-4">Быстрый список контента</h3>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-xs text-gray-300">
+                                <thead class="bg-dark-900/60 uppercase text-gray-400 text-[10px]">
+                                    <tr>
+                                        <th class="p-3">Сериал</th>
+                                        <th class="p-3">Жанр</th>
+                                        <th class="p-3">Рейтинг</th>
+                                        <th class="p-3">Серий</th>
+                                        <th class="p-3">Действия</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-dark-700/60">
+                                    ${seriesDB.map(s => `
+                                        <tr>
+                                            <td class="p-3 font-bold text-white flex items-center space-x-3">
+                                                <img src="${s.poster}" class="w-8 h-10 rounded-lg object-cover">
+                                                <span>${s.title}</span>
+                                            </td>
+                                            <td class="p-3">${s.genre}</td>
+                                            <td class="p-3 text-gold-400 font-bold"><i class="fa-solid fa-star text-[10px] mr-1"></i>${s.rating}</td>
+                                            <td class="p-3">${s.episodes.length}</td>
+                                            <td class="p-3">
+                                                <button onclick="switchAdminTab('series')" class="text-gold-400 hover:underline">Управлять</button>
+                                            </td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderAdminSeriesView() {
+            return `
+                <div class="space-y-6">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h1 class="text-2xl font-bold text-white">Управление сериалами</h1>
+                            <p class="text-xs text-gray-400">Добавление и редактирование вертикального видеоконтента</p>
+                        </div>
+                        <button onclick="openSeriesModal()" class="px-4 py-2.5 bg-gold-500 hover:bg-gold-400 text-dark-900 font-bold text-xs rounded-xl shadow-lg flex items-center space-x-2">
+                            <i class="fa-solid fa-plus"></i>
+                            <span>Добавить сериал</span>
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        ${seriesDB.map(s => `
+                            <div class="bg-dark-800 border border-dark-700 rounded-2xl overflow-hidden flex flex-col justify-between">
+                                <div class="p-4 flex space-x-3">
+                                    <img src="${s.poster}" class="w-20 h-28 object-cover rounded-xl shrink-0">
+                                    <div class="flex-1 min-w-0 space-y-1">
+                                        <span class="text-[10px] bg-gold-500/10 text-gold-400 px-2 py-0.5 rounded-full border border-gold-500/20 font-bold">${s.genre}</span>
+                                        <h3 class="text-sm font-bold text-white truncate">${s.title}</h3>
+                                        <p class="text-xs text-gray-400 line-clamp-2">${s.synopsis}</p>
+                                        <div class="text-xs text-gray-400 pt-1">
+                                            <span class="text-gold-400 font-bold"><i class="fa-solid fa-star text-[10px]"></i> ${s.rating}</span>
+                                            <span class="mx-1">•</span>
+                                            <span>${s.episodes.length} серий</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="bg-dark-900/60 p-3 border-t border-dark-700 flex justify-between items-center text-xs">
+                                    <button onclick="openEpisodesModal(${s.id})" class="text-gold-400 font-bold hover:underline flex items-center space-x-1">
+                                        <i class="fa-solid fa-list-check"></i>
+                                        <span>Серии (${s.episodes.length})</span>
+                                    </button>
+                                    <div class="flex space-x-2">
+                                        <button onclick="openSeriesModal(${s.id})" class="w-8 h-8 rounded-lg bg-dark-700 text-gray-300 hover:text-white flex items-center justify-center">
+                                            <i class="fa-solid fa-pen"></i>
+                                        </button>
+                                        <button onclick="deleteSeries(${s.id})" class="w-8 h-8 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 flex items-center justify-center">
+                                            <i class="fa-solid fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderAdminCategoriesView() {
+            return `
+                <div class="space-y-6 max-w-2xl">
+                    <div>
+                        <h1 class="text-2xl font-bold text-white">Категории и Рубрики</h1>
+                        <p class="text-xs text-gray-400">Управление жанрами для фильтрации в мобильном приложении</p>
+                    </div>
+
+                    <form onsubmit="addCategory(event)" class="flex space-x-2">
+                        <input type="text" id="new-category-input" placeholder="Название новой категории..." required class="flex-1 bg-dark-800 border border-dark-600 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-gold-500">
+                        <button type="submit" class="px-5 py-2.5 bg-gold-500 hover:bg-gold-400 text-dark-900 font-bold text-xs rounded-xl">Добавить</button>
+                    </form>
+
+                    <div class="bg-dark-800 rounded-2xl border border-dark-700 overflow-hidden divide-y divide-dark-700/60">
+                        ${categoriesDB.map(cat => `
+                            <div class="p-4 flex justify-between items-center text-xs">
+                                <span class="font-bold text-white">${cat}</span>
+                                <button onclick="deleteCategory('${cat}')" class="text-red-400 hover:text-red-300 font-semibold flex items-center space-x-1">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                    <span>Удалить</span>
+                                </button>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        // --- Admin Actions (CRUD) ---
+        function openSeriesModal(seriesId = null) {
+            appState.editingSeriesId = seriesId;
+            const modal = document.getElementById('admin-series-modal');
+            const titleEl = document.getElementById('series-modal-title');
+            const genreSelect = document.getElementById('form-series-genre');
+
+            genreSelect.innerHTML = categoriesDB.map(c => `<option value="${c}">${c}</option>`).join('');
+
+            if (seriesId) {
+                const s = seriesDB.find(item => item.id === seriesId);
+                titleEl.textContent = 'Редактировать сериал';
+                document.getElementById('edit-series-id').value = s.id;
+                document.getElementById('form-series-title').value = s.title;
+                document.getElementById('form-series-genre').value = s.genre;
+                document.getElementById('form-series-rating').value = s.rating;
+                document.getElementById('form-series-poster').value = s.poster;
+                document.getElementById('form-series-synopsis').value = s.synopsis;
+            } else {
+                titleEl.textContent = 'Добавить сериал';
+                document.getElementById('series-form').reset();
+                document.getElementById('edit-series-id').value = '';
+            }
+
+            modal.classList.remove('hidden');
+        }
+
+        function closeSeriesModal() {
+            document.getElementById('admin-series-modal').classList.add('hidden');
+        }
+
+        function saveSeries(e) {
+            e.preventDefault();
+            const id = document.getElementById('edit-series-id').value;
+            const title = document.getElementById('form-series-title').value;
+            const genre = document.getElementById('form-series-genre').value;
+            const rating = parseFloat(document.getElementById('form-series-rating').value);
+            const poster = document.getElementById('form-series-poster').value;
+            const synopsis = document.getElementById('form-series-synopsis').value;
+
+            if (id) {
+                const s = seriesDB.find(item => item.id == id);
+                if (s) {
+                    s.title = title;
+                    s.genre = genre;
+                    s.rating = rating;
+                    s.poster = poster;
+                    s.synopsis = synopsis;
+                }
+            } else {
+                const newSeries = {
+                    id: Date.now(),
+                    title,
+                    genre,
+                    rating,
+                    views: "1K",
+                    poster,
+                    synopsis,
+                    episodes: [
+                        { id: Date.now() + 1, title: "Серия 1", duration: "1:30", videoUrl: "https://assets.mixkit.co/videos/preview/mixkit-woman-running-in-front-of-neon-lights-42867-large.mp4" }
+                    ]
+                };
+                seriesDB.unshift(newSeries);
+            }
+
+            saveDB();
+            closeSeriesModal();
+            renderAdminView();
+            renderCurrentView();
+            showToast('Сериал сохранен');
+        }
+
+        function deleteSeries(id) {
+            seriesDB = seriesDB.filter(s => s.id !== id);
+            saveDB();
+            renderAdminView();
+            renderCurrentView();
+            showToast('Сериал удален');
+        }
+
+        function openEpisodesModal(seriesId) {
+            appState.editingSeriesId = seriesId;
+            const series = seriesDB.find(s => s.id === seriesId);
+            if (!series) return;
+
+            document.getElementById('episodes-modal-series-title').textContent = series.title;
+            renderEpisodesList(series);
+            document.getElementById('admin-episodes-modal').classList.remove('hidden');
+        }
+
+        function closeEpisodesModal() {
+            document.getElementById('admin-episodes-modal').classList.add('hidden');
+        }
+
+        function renderEpisodesList(series) {
+            const container = document.getElementById('episodes-list-container');
+            container.innerHTML = series.episodes.map((ep, idx) => `
+                <div class="flex items-center justify-between p-3 bg-dark-900 rounded-xl border border-dark-700 text-xs">
+                    <div>
+                        <h5 class="font-bold text-white">${ep.title}</h5>
+                        <span class="text-gray-400 text-[10px]">Длительность: ${ep.duration}</span>
+                    </div>
+                    <button onclick="deleteEpisode(${series.id}, ${ep.id})" class="text-red-400 hover:text-red-300 font-bold text-xs">
+                        <i class="fa-solid fa-trash"></i>
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        function addEpisodeToSeries(e) {
+            e.preventDefault();
+            const series = seriesDB.find(s => s.id === appState.editingSeriesId);
+            if (!series) return;
+
+            const title = document.getElementById('form-ep-title').value;
+            const duration = document.getElementById('form-ep-duration').value;
+            const videoUrl = document.getElementById('form-ep-url').value;
+
+            series.episodes.push({
+                id: Date.now(),
+                title,
+                duration,
+                videoUrl
+            });
+
+            saveDB();
+            renderEpisodesList(series);
+            renderAdminView();
+            renderCurrentView();
+            document.getElementById('form-ep-title').value = '';
+            document.getElementById('form-ep-duration').value = '';
+            document.getElementById('form-ep-url').value = '';
+            showToast('Серия добавлена');
+        }
+
+        function deleteEpisode(seriesId, epId) {
+            const series = seriesDB.find(s => s.id === seriesId);
+            if (!series) return;
+            series.episodes = series.episodes.filter(ep => ep.id !== epId);
+            saveDB();
+            renderEpisodesList(series);
+            renderAdminView();
+            renderCurrentView();
+            showToast('Серия удалена');
+        }
+
+        function addCategory(e) {
+            e.preventDefault();
+            const input = document.getElementById('new-category-input');
+            const val = input.value.trim();
+            if (val && !categoriesDB.includes(val)) {
+                categoriesDB.push(val);
+                saveDB();
+                input.value = '';
+                renderAdminView();
+                renderCurrentView();
+                showToast('Категория добавлена');
+            }
+        }
+
+        function deleteCategory(cat) {
+            categoriesDB = categoriesDB.filter(c => c !== cat);
+            saveDB();
+            renderAdminView();
+            renderCurrentView();
+            showToast('Категория удалена');
+        }
+    </script>
 </body>
 </html>
