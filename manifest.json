@@ -5,7 +5,7 @@
   "display": "standalone",
   "version": "1.0.0",
   "background_color": "#0d0d0d",
-  "theme_color": "#d4af37",
+  "theme_color": "#003399",
   "icons": [
     {
       "src": "https://ogradjuk.github.io/vertical-drama/icon.png",
